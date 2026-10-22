@@ -4,8 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0f172a" />
-  <link rel="manifest" href="./manifest.json" />
-  <title>SiteKhata FastPro</title>
+  <title>SiteKhata v3.0 - PM Expense & Claim Manager</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -23,91 +22,65 @@
 </head>
 <body class="bg-slate-100 text-slate-900 pb-32">
 
-  <!-- ================= TOAST NOTIFICATION ================= -->
-  <div id="toastBanner" class="fixed top-14 left-1/2 -translate-x-1/2 z-[100] hidden px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs text-white bg-slate-900 border border-slate-700 transition-all max-w-xs text-center">
-    Notification
-  </div>
+  <!-- TOAST BANNER -->
+  <div id="toastBanner" class="fixed top-14 left-1/2 -translate-x-1/2 z-[100] hidden px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs text-white bg-slate-900 border border-slate-700 transition-all max-w-xs text-center"></div>
 
-  <!-- ================= PWA INSTALL BANNER ================= -->
-  <div id="installAppBanner" class="hidden bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between shadow-md sticky top-0 z-50 no-print">
-    <div class="flex items-center gap-2">
-      <span class="text-xl">📲</span>
-      <div>
-        <p class="text-xs font-black leading-tight">Install SiteKhata App</p>
-        <p class="text-[10px] text-blue-100 leading-tight">Add fast icon to your phone screen</p>
-      </div>
-    </div>
-    <button onclick="triggerInstallPrompt()" class="bg-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-black shadow">
-      Install
-    </button>
-  </div>
-
-  <!-- ================= ENGINE STATUS BAR ================= -->
-  <div id="networkStatusBar" class="bg-slate-900 text-emerald-400 text-[11px] font-bold py-1.5 px-4 border-b border-slate-800 flex items-center justify-between sticky top-0 z-40 no-print">
+  <!-- ENGINE STATUS BAR -->
+  <div class="bg-slate-900 text-emerald-400 text-[11px] font-bold py-1.5 px-4 border-b border-slate-800 flex items-center justify-between sticky top-0 z-40 no-print">
     <div class="flex items-center gap-1.5">
-      <span id="engineStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-      <span id="engineStatusText">Pre-Warming Fast Scanner...</span>
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="engineStatusText">v3.0 Scanner Ready</span>
     </div>
-    <button onclick="openSettingsModal()" class="text-[10px] bg-slate-800 text-slate-200 px-2 py-0.5 rounded border border-slate-700">
+    <button onclick="openSettingsModal()" class="text-[10px] bg-slate-800 text-slate-200 px-2.5 py-0.5 rounded border border-slate-700">
       🔑 AI Key Setup
     </button>
   </div>
 
-  <!-- ================= LOGIN MODAL ================= -->
+  <!-- LOGIN MODAL -->
   <div id="loginModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
       <div class="text-5xl">⚡</div>
       <div>
-        <h2 class="text-2xl font-black text-slate-800">SiteKhata FastPro</h2>
-        <p class="text-slate-500 text-xs mt-1">High-Speed Site Expense & Claim Manager</p>
+        <h2 class="text-2xl font-black text-slate-800">SiteKhata v3.0</h2>
+        <p class="text-slate-500 text-xs mt-1">Accurate UPI & Site Expense Claim Manager</p>
       </div>
       <div>
         <label class="block text-left text-xs font-bold text-slate-600 mb-1">YOUR NAME</label>
-        <input type="text" id="loginNameInput" placeholder="e.g. Ramesh Kumar" 
-               class="w-full px-4 py-3 text-lg border-2 border-slate-300 rounded-xl focus:outline-blue-600 font-bold" />
+        <input type="text" id="loginNameInput" placeholder="e.g. Ramesh Kumar" class="w-full px-4 py-3 text-lg border-2 border-slate-300 rounded-xl focus:outline-blue-600 font-bold" />
       </div>
-      <button onclick="handleLogin()" 
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 text-base rounded-xl shadow-lg">
-        Start Fast Khata ➔
+      <button onclick="handleLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 text-base rounded-xl shadow-lg">
+        Open My Khata ➔
       </button>
     </div>
   </div>
 
-  <!-- ================= LOGOUT CONFIRMATION MODAL ================= -->
+  <!-- LOGOUT MODAL -->
   <div id="logoutConfirmModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
       <div class="text-4xl">🚪</div>
       <h3 class="text-xl font-black text-slate-800">Log Out / Switch User?</h3>
-      <p class="text-xs text-slate-500">Your recorded transactions and receipt images stay safely stored on your phone.</p>
+      <p class="text-xs text-slate-500">Your saved expenses remain safely stored on this phone.</p>
       <div class="space-y-2 pt-2">
-        <button onclick="executeLogout()" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl text-sm shadow">
-          Yes, Log Out Now
-        </button>
-        <button onclick="closeLogoutConfirm()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">
-          Cancel
-        </button>
+        <button onclick="executeLogout()" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl text-sm shadow">Yes, Log Out</button>
+        <button onclick="closeLogoutConfirm()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= DELETE CONFIRMATION MODAL ================= -->
+  <!-- DELETE MODAL -->
   <div id="deleteConfirmModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
       <div class="text-4xl">🗑️</div>
-      <h3 class="text-lg font-black text-slate-800">Delete Transaction?</h3>
+      <h3 class="text-lg font-black text-slate-800" id="deleteModalTitle">Delete Transaction?</h3>
       <p class="text-xs text-slate-500" id="deleteConfirmDesc">This entry will be removed.</p>
       <div class="flex gap-2 pt-2">
-        <button onclick="confirmDeleteTxn()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl text-sm shadow">
-          Delete
-        </button>
-        <button onclick="closeDeleteModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">
-          Cancel
-        </button>
+        <button onclick="confirmDeleteTxn()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl text-sm shadow">Delete</button>
+        <button onclick="closeDeleteModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= FULL-SCREEN RECEIPT ZOOM ================= -->
+  <!-- LIGHTBOX -->
   <div id="imageLightbox" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-4 hidden no-print">
     <div class="w-full flex justify-between items-center text-white pb-2">
       <span id="lightboxCaption" class="text-sm font-bold truncate">Receipt Proof</span>
@@ -119,30 +92,24 @@
     <div id="lightboxSub" class="text-xs text-slate-300 font-mono pt-2 text-center"></div>
   </div>
 
-  <!-- ================= HEADER ================= -->
+  <!-- HEADER -->
   <header class="bg-slate-900 text-white p-4 shadow-md no-print">
     <div class="max-w-xl mx-auto flex items-center justify-between">
       <div>
         <h1 class="text-lg font-black tracking-wide flex items-center gap-1.5">
-          <span>📋</span> SiteKhata <span class="text-[10px] bg-emerald-600 px-1.5 py-0.5 rounded font-black">FAST</span>
+          <span>📋</span> SiteKhata <span class="text-[10px] bg-emerald-600 px-1.5 py-0.5 rounded font-black">v3.0</span>
         </h1>
         <p class="text-xs text-slate-400">Manager: <span id="headerUserName" class="text-white font-bold"></span></p>
       </div>
       <div class="flex items-center gap-1.5">
-        <button onclick="openCategoryModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">
-          🏷️ Tags
-        </button>
-        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">
-          ⚙️ Settings
-        </button>
-        <button onclick="showLogoutConfirm()" class="bg-red-900/80 hover:bg-red-800 px-2.5 py-2 rounded-lg text-xs font-bold text-red-100 border border-red-700">
-          🚪 Logout
-        </button>
+        <button onclick="openCategoryModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">🏷️ Tags</button>
+        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">⚙️ Settings</button>
+        <button onclick="showLogoutConfirm()" class="bg-red-900/80 hover:bg-red-800 px-2.5 py-2 rounded-lg text-xs font-bold text-red-100 border border-red-700">🚪 Logout</button>
       </div>
     </div>
   </header>
 
-  <!-- ================= MAIN DASHBOARD ================= -->
+  <!-- MAIN CONTENT -->
   <main class="max-w-xl mx-auto p-4 space-y-4 no-print">
 
     <!-- Month & Claim Summary -->
@@ -152,8 +119,7 @@
           <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider block">Expense Month</label>
           <span class="text-[10px] text-slate-400" id="totalMonthCountText">0 total records</span>
         </div>
-        <input type="month" id="selectedMonth" onchange="renderUI()" 
-               class="border-2 border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-800 focus:outline-blue-600" />
+        <input type="month" id="selectedMonth" onchange="renderUI()" class="border-2 border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-800 focus:outline-blue-600" />
       </div>
 
       <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white p-4 rounded-xl shadow-md">
@@ -164,26 +130,24 @@
         <div class="text-3xl font-black mt-1" id="totalClaimableDisplay">₹0</div>
         <div class="flex justify-between items-center mt-2 pt-2 border-t border-white/20 text-[11px]">
           <span id="nonClaimableDisplay">Non-Claimable: ₹0</span>
-          <button onclick="shareWhatsAppSummary()" class="bg-white text-emerald-900 font-black px-2.5 py-1 rounded-lg shadow-sm">
-            📲 WhatsApp Share
-          </button>
+          <button onclick="shareWhatsAppSummary()" class="bg-white text-emerald-900 font-black px-2.5 py-1 rounded-lg shadow-sm">📲 WhatsApp Share</button>
         </div>
       </div>
     </div>
 
-    <!-- Fast Action Bar -->
+    <!-- Action Buttons (Supports Images AND PDFs) -->
     <div class="grid grid-cols-3 gap-2">
       <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition">
         <span class="text-2xl">📸</span>
-        <span class="font-black text-xs mt-1">Bulk UPI Scan</span>
-        <span class="text-[9px] opacity-85">(10–40 Screenshots)</span>
-        <input type="file" id="bulkInput" multiple accept="image/*" class="hidden" onchange="handleBulkFiles(event)" />
+        <span class="font-black text-xs mt-1">Scan Receipts</span>
+        <span class="text-[9px] opacity-85">(Photos or PDF)</span>
+        <input type="file" id="bulkInput" multiple accept="image/*,application/pdf" class="hidden" onchange="handleBulkFiles(event)" />
       </label>
 
       <button onclick="openManualModal()" class="bg-slate-800 hover:bg-slate-700 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition">
         <span class="text-2xl">➕</span>
         <span class="font-black text-xs mt-1">Manual Entry</span>
-        <span class="text-[9px] opacity-85">(Cash / Paper Bill)</span>
+        <span class="text-[9px] opacity-85">(Cash / Bill)</span>
       </button>
 
       <button onclick="openMonthlyProofReport()" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition">
@@ -193,40 +157,34 @@
       </button>
     </div>
 
-    <!-- Live Stopwatch Progress Bar -->
+    <!-- Progress Bar -->
     <div id="processingAlert" class="hidden bg-amber-100 border-2 border-amber-400 p-3.5 rounded-xl text-center text-amber-900 font-bold text-xs shadow">
-      <div id="processingStatusText">⚡ High-Speed Batch Scanning...</div>
+      <div id="processingStatusText">⚡ Reading Receipts...</div>
       <div class="w-full bg-amber-200 h-2 rounded-full mt-2 overflow-hidden">
-        <div id="scanProgressBar" class="bg-amber-600 h-full transition-all duration-300" style="width: 10%"></div>
+        <div id="scanProgressBar" class="bg-amber-600 h-full transition-all duration-300" style="width: 15%"></div>
       </div>
       <p class="text-[11px] font-mono text-amber-800 mt-1" id="stopwatchText">Elapsed: 0.0s</p>
     </div>
 
     <!-- Search Bar -->
     <div class="relative">
-      <input type="text" id="searchInput" oninput="renderUI()" placeholder="🔍 Search vendor, note, amount, or UTR..." 
-             class="w-full pl-4 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-blue-600 shadow-sm" />
+      <input type="text" id="searchInput" oninput="renderUI()" placeholder="🔍 Search vendor, note, amount, or UTR..." class="w-full pl-4 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-blue-600 shadow-sm" />
       <button onclick="clearSearch()" class="absolute right-3 top-2.5 text-slate-400 text-sm font-bold">✕</button>
     </div>
 
-    <!-- Category Filter Chips -->
+    <!-- Category Chips -->
     <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs font-bold" id="filterChipsContainer"></div>
 
-    <!-- Hint for 1-Tap Inline Editing -->
-    <div class="text-[11px] text-slate-500 font-semibold px-1 flex items-center justify-between">
-      <span>💡 Tip: Tap any Amount or Name on a card to edit instantly</span>
-    </div>
-
-    <!-- Transaction Cards List -->
+    <!-- Transactions List -->
     <div class="space-y-3" id="transactionsContainer"></div>
 
   </main>
 
-  <!-- ================= SETTINGS & PRIVATE KEY VAULT MODAL ================= -->
+  <!-- SETTINGS MODAL -->
   <div id="settingsModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-black text-slate-800 text-base">Settings & Private Key Vault</h3>
+        <h3 class="font-black text-slate-800 text-base">Settings & AI Key Setup</h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
       </div>
 
@@ -235,35 +193,33 @@
         <input type="text" id="settingsNameInput" class="w-full p-2.5 border-2 rounded-xl text-sm font-bold mt-1" />
       </div>
 
-      <!-- Private Phone Key Vault (Hidden from GitHub) -->
       <div class="bg-blue-50/70 p-3.5 rounded-xl border border-blue-200 space-y-2">
         <div class="flex justify-between items-center">
-          <label class="block text-xs font-black text-slate-800 uppercase">🔒 Private Google AI Key</label>
-          <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Hidden from GitHub</span>
+          <label class="block text-xs font-black text-slate-800 uppercase">🔒 Google Gemini API Key</label>
+          <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">Private Vault</span>
         </div>
         <p class="text-[10px] text-slate-600 leading-normal">
-          Because GitHub cancels keys pasted in public code, paste a fresh key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">aistudio.google.com</a> here. It is stored <strong>only inside your phone</strong>.
+          Paste your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-600 underline font-bold">aistudio.google.com</a>. Saved privately on your phone.
         </p>
-        <input type="password" id="settingsApiKeyInput" placeholder="Paste fresh AQ. or AIza key here" class="w-full p-2.5 border-2 rounded-xl text-xs font-mono bg-white" />
-        
-        <button onclick="testGeminiConnection()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5">
-          <span>⚡</span> Verify & Test Key Speed
+        <input type="text" id="settingsApiKeyInput" placeholder="Paste AQ. or AIza key here" class="w-full p-2.5 border-2 rounded-xl text-xs font-mono bg-white" />
+        <button onclick="testGeminiConnection()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs">
+          ⚡ Verify & Test Key Speed
         </button>
         <div id="apiTestStatus" class="hidden text-[11px] font-bold p-2.5 rounded-lg text-center leading-normal"></div>
       </div>
 
-      <!-- Phone Backup -->
       <div class="border-t pt-3 space-y-2">
-        <label class="block text-xs font-bold text-slate-600 uppercase">Device Data Backup</label>
+        <label class="block text-xs font-bold text-slate-600 uppercase">Data Management</label>
         <div class="grid grid-cols-2 gap-2">
-          <button onclick="downloadJsonBackup()" class="bg-slate-800 text-white text-xs font-bold py-2.5 rounded-lg">
-            💾 Export Backup
-          </button>
+          <button onclick="downloadJsonBackup()" class="bg-slate-800 text-white text-xs font-bold py-2.5 rounded-lg">💾 Export Backup</button>
           <label class="bg-slate-200 text-slate-800 text-xs font-bold py-2.5 rounded-lg text-center cursor-pointer flex items-center justify-center">
             📂 Restore Backup
             <input type="file" accept=".json" class="hidden" onchange="restoreJsonBackup(event)" />
           </label>
         </div>
+        <button onclick="clearAllTransactions()" class="w-full bg-red-50 text-red-600 border border-red-200 text-xs font-bold py-2 rounded-lg mt-1">
+          🗑️ Clear All Recorded Transactions
+        </button>
       </div>
 
       <div class="pt-2 border-t flex gap-2">
@@ -273,47 +229,32 @@
     </div>
   </div>
 
-  <!-- ================= MANUAL ENTRY MODAL ================= -->
+  <!-- MANUAL ENTRY MODAL -->
   <div id="txnModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-3 max-h-[92vh] overflow-y-auto">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-black text-slate-800 text-base" id="modalTitle">Add Expense</h3>
         <button onclick="closeTxnModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
       </div>
-
       <input type="hidden" id="editTxnId" />
-
       <div>
         <label class="block text-[11px] font-bold text-slate-600 uppercase">Amount (₹) *</label>
-        <input type="number" step="any" id="txnAmount" placeholder="e.g. 2450" 
-               class="w-full p-2.5 border-2 rounded-xl text-xl font-black focus:outline-blue-600" />
+        <input type="number" step="any" id="txnAmount" placeholder="e.g. 2000" class="w-full p-2.5 border-2 rounded-xl text-xl font-black focus:outline-blue-600" />
       </div>
-
       <div>
         <label class="block text-[11px] font-bold text-slate-600 uppercase">Paid To (Vendor / Person) *</label>
-        <div class="flex gap-1.5">
-          <input type="text" id="txnPaidTo" placeholder="e.g. Balaji Hardware" 
-                 class="flex-1 p-2.5 border-2 rounded-xl text-sm font-bold focus:outline-blue-600" />
-          <button type="button" onclick="startVoiceInput('txnPaidTo')" class="bg-slate-100 border px-3 rounded-xl text-base" title="Voice Input">🎤</button>
-        </div>
+        <input type="text" id="txnPaidTo" placeholder="e.g. LAKSHMI YADAV" class="w-full p-2.5 border-2 rounded-xl text-sm font-bold focus:outline-blue-600" />
       </div>
-
       <div>
         <label class="block text-[11px] font-bold text-slate-600 uppercase">Site Purpose / Note</label>
-        <div class="flex gap-1.5 mt-0.5">
-          <input type="text" id="txnNote" placeholder="e.g. 10 Bags Cement / JCB Fuel" 
-                 class="flex-1 p-2 border-2 rounded-xl text-xs font-bold focus:outline-blue-600" />
-          <button type="button" onclick="startVoiceInput('txnNote')" class="bg-slate-100 border px-3 rounded-xl text-sm" title="Voice Input">🎤</button>
-        </div>
+        <input type="text" id="txnNote" placeholder="e.g. Cement / JCB Fuel / Hotel" class="w-full p-2 border-2 rounded-xl text-xs font-bold focus:outline-blue-600" />
         <div class="flex gap-1 flex-wrap mt-1.5">
           <button type="button" onclick="setQuickNote('Site Material')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Material</button>
           <button type="button" onclick="setQuickNote('Labour Expense')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Labour</button>
           <button type="button" onclick="setQuickNote('Diesel / Fuel')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Fuel</button>
-          <button type="button" onclick="setQuickNote('Transport')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Transport</button>
-          <button type="button" onclick="setQuickNote('Tea / Refreshment')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Tea/Food</button>
+          <button type="button" onclick="setQuickNote('Food / Hotel')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Food/Hotel</button>
         </div>
       </div>
-
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label class="block text-[11px] font-bold text-slate-600 uppercase">Date *</label>
@@ -324,12 +265,10 @@
           <input type="text" id="txnUtr" placeholder="12-digit UTR" class="w-full p-2 border-2 rounded-xl text-xs font-bold" />
         </div>
       </div>
-
       <div>
         <label class="block text-[11px] font-bold text-slate-600 uppercase">Category *</label>
         <select id="txnCategorySelect" class="w-full p-2.5 border-2 rounded-xl text-xs font-bold bg-white focus:outline-blue-600"></select>
       </div>
-
       <div class="bg-slate-50 p-2.5 rounded-xl border">
         <label class="block text-[11px] font-bold text-slate-600 uppercase">Attach / Change Bill Photo</label>
         <input type="file" id="txnPhotoInput" accept="image/*" class="w-full text-xs text-slate-500 mt-1" onchange="handleManualPhotoSelect(event)" />
@@ -338,60 +277,42 @@
           <span class="text-[10px] text-emerald-700 font-bold">✓ Photo Attached</span>
         </div>
       </div>
-
       <div class="flex gap-2 pt-2">
-        <button onclick="saveManualTxn()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm shadow">
-          Save Record
-        </button>
-        <button onclick="closeTxnModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">
-          Cancel
-        </button>
+        <button onclick="saveManualTxn()" class="flex-1 bg-blue-600 text-white font-bold py-3 rounded-xl text-sm shadow">Save Record</button>
+        <button onclick="closeTxnModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">Cancel</button>
       </div>
     </div>
   </div>
 
-  <!-- ================= CATEGORY MODAL ================= -->
+  <!-- CATEGORY MODAL -->
   <div id="categoryModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
     <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4">
       <div class="flex justify-between items-center border-b pb-2">
         <h3 class="font-black text-slate-800 text-base">Expense Categories</h3>
         <button onclick="closeCategoryModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
       </div>
-
       <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
         <label class="block text-[11px] font-black text-slate-600 uppercase">Create New Category</label>
         <input type="text" id="newCategoryName" placeholder="e.g. Site Petty Cash, Hardware" class="w-full p-2 border-2 rounded-lg text-xs font-bold" />
-        
         <label class="flex items-center gap-2 pt-1 cursor-pointer">
           <input type="checkbox" id="newCategoryIsClaimable" checked class="w-4 h-4 text-emerald-600 rounded" />
           <span class="text-xs font-bold text-slate-700">Claimable from Company?</span>
         </label>
-
-        <button onclick="saveNewCategory()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">
-          + Add Category
-        </button>
+        <button onclick="saveNewCategory()" class="w-full bg-slate-900 text-white font-bold py-2 rounded-lg text-xs">+ Add Category</button>
       </div>
-
       <div class="max-h-52 overflow-y-auto space-y-1.5" id="categoryListContainer"></div>
-
       <button onclick="closeCategoryModal()" class="w-full bg-slate-200 text-slate-800 font-bold py-2.5 rounded-xl text-xs">Done</button>
     </div>
   </div>
 
-  <!-- ================= PRINTABLE MONTHLY CLAIM REPORT ================= -->
+  <!-- PRINTABLE MONTHLY CLAIM REPORT -->
   <div id="printableReport" class="hidden p-6 md:p-8 bg-white text-slate-900 min-h-screen">
     <div class="mb-6 p-3 bg-slate-900 text-white rounded-xl flex flex-wrap gap-2 items-center justify-between no-print">
       <span class="text-xs font-bold">📄 Monthly Claim Sheet Preview</span>
       <div class="flex gap-2">
-        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
-          🖨️ Print / Save PDF
-        </button>
-        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
-          📥 Download Excel
-        </button>
-        <button onclick="closeReport()" class="bg-slate-700 text-white font-bold px-3 py-2 rounded-lg text-xs">
-          ✕ Close
-        </button>
+        <button onclick="window.print()" class="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">🖨️ Print / Save PDF</button>
+        <button onclick="exportToExcel()" class="bg-emerald-600 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">📥 Download Excel</button>
+        <button onclick="closeReport()" class="bg-slate-700 text-white font-bold px-3 py-2 rounded-lg text-xs">✕ Close</button>
       </div>
     </div>
 
@@ -450,9 +371,16 @@
     </div>
   </div>
 
-  <!-- ================= FAST-PACED DUAL ENGINE JAVASCRIPT ================= -->
+  <!-- ================= CORE ENGINE JAVASCRIPT ================= -->
   <script>
-    // Toast Notification
+    // 1. Auto-Clear Old Service Worker Cache so updates always load immediately
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+
     let toastTimer = null;
     function showToast(msg, bgClass = "bg-slate-900") {
       const t = document.getElementById('toastBanner');
@@ -460,27 +388,9 @@
       t.className = `fixed top-14 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs text-white transition-all max-w-xs text-center ${bgClass}`;
       t.classList.remove('hidden');
       clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+      toastTimer = setTimeout(() => t.classList.add('hidden'), 3500);
     }
 
-    // PWA Install
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installAppBanner').classList.remove('hidden');
-    });
-    function triggerInstallPrompt() {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then(() => {
-          document.getElementById('installAppBanner').classList.add('hidden');
-          deferredPrompt = null;
-        });
-      }
-    }
-
-    // IndexedDB High-Speed Storage
     let db;
     function openDatabase() {
       return new Promise((resolve, reject) => {
@@ -520,6 +430,14 @@
       });
     }
 
+    function dbClearAll() {
+      return new Promise((resolve) => {
+        const tx = db.transaction('transactions', 'readwrite');
+        tx.objectStore('transactions').clear();
+        tx.oncomplete = () => resolve();
+      });
+    }
+
     const defaultCategories = [
       { id: 'cat_comp', name: 'Claimable from Company', isClaimable: true, badgeClass: 'bg-emerald-600 text-white' },
       { id: 'cat_pers_claim', name: 'Personal and Claimable', isClaimable: true, badgeClass: 'bg-teal-600 text-white' },
@@ -532,55 +450,28 @@
     let currentFilter = 'ALL';
     let userName = localStorage.getItem('sk_username') || '';
     let apiKey = sanitizeApiKey(localStorage.getItem('sk_gemini_key') || '');
-    // Clear out the old revoked GitHub key automatically if it's still in localStorage
-    if (apiKey.startsWith('AQ.Ab8RN6LCCJzA32II')) {
-      apiKey = '';
-      localStorage.removeItem('sk_gemini_key');
-    }
-
     let activeAiModel = 'gemini-3.8-flash';
     let manualTempPhoto = null;
     let pendingDeleteId = null;
-
-    // Pre-Warmed Dual OCR Workers (For 0.0s startup delay even without API key)
-    let ocrWorkerPool = [];
-    let isPoolReady = false;
-
-    async function preWarmOcrPool() {
-      try {
-        const w1 = await Tesseract.createWorker('eng');
-        ocrWorkerPool.push(w1);
-        isPoolReady = true;
-        updateEngineBanner();
-        // Warm second parallel worker quietly
-        const w2 = await Tesseract.createWorker('eng');
-        ocrWorkerPool.push(w2);
-      } catch (e) {
-        console.warn("Local OCR prewarm note:", e);
-        updateEngineBanner();
-      }
-    }
-
-    function updateEngineBanner() {
-      const txt = document.getElementById('engineStatusText');
-      if (apiKey) {
-        txt.innerText = `⚡ Cloud AI Turbo + On-Device Engine Active`;
-      } else if (isPoolReady) {
-        txt.innerText = `⚡ On-Device Turbo Scanner Pre-Warmed & Ready`;
-      } else {
-        txt.innerText = `⚡ SiteKhata FastPro Ready`;
-      }
-    }
+    let ocrWorker = null;
 
     function sanitizeApiKey(key) {
       if (!key) return '';
       return key.trim().replace(/[\r\n\t\s\'\"]/g, '');
     }
 
+    function updateEngineBanner() {
+      const txt = document.getElementById('engineStatusText');
+      if (apiKey) {
+        txt.innerText = `✨ Gemini AI Vision Active (${activeAiModel})`;
+      } else {
+        txt.innerText = `📱 Local Scanner Ready (Tap 'AI Key Setup' for Cloud AI)`;
+      }
+    }
+
     function normalizeDateStr(rawDate, fallbackTimestamp = null) {
       const baseDate = fallbackTimestamp ? new Date(fallbackTimestamp) : new Date();
       const fallback = `${baseDate.getFullYear()}-${String(baseDate.getMonth() + 1).padStart(2, '0')}-${String(baseDate.getDate()).padStart(2, '0')}`;
-
       if (!rawDate || typeof rawDate !== 'string') return fallback;
       const clean = rawDate.trim();
       if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
@@ -597,8 +488,6 @@
 
     window.onload = async function() {
       await openDatabase();
-      preWarmOcrPool(); // Start warming background scanner immediately
-
       const now = new Date();
       document.getElementById('selectedMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
@@ -624,10 +513,8 @@
       document.getElementById('loginModal').classList.add('hidden');
       renderFilterChips();
       renderUI();
-      showToast(`Welcome, ${userName}!`, 'bg-emerald-600');
     }
 
-    // Logout
     function showLogoutConfirm() { document.getElementById('logoutConfirmModal').classList.remove('hidden'); }
     function closeLogoutConfirm() { document.getElementById('logoutConfirmModal').classList.add('hidden'); }
     function executeLogout() {
@@ -638,29 +525,39 @@
       closeLogoutConfirm();
       closeSettingsModal();
       document.getElementById('loginModal').classList.remove('hidden');
-      showToast('Logged out safely', 'bg-slate-800');
     }
 
-    // ================= CLOUD AI CALLER (STRICT x-goog-api-key HEADER FOR AQ. KEYS) =================
+    // ================= GEMINI VISION API (FULL THINKING TOKEN SUPPORT) =================
     async function executeGeminiRequest(key, requestPayload) {
       const cleanKey = sanitizeApiKey(key);
       if (!cleanKey) throw new Error("No API key set.");
 
-      requestPayload.generationConfig = { temperature: 0, maxOutputTokens: 600 };
+      requestPayload.generationConfig = {
+        temperature: 0,
+        maxOutputTokens: 8192
+      };
 
-      const models = [activeAiModel, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.0-flash'];
+      const models = [activeAiModel, 'gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.0-flash'];
       const uniqueModels = [...new Set(models)];
       let lastErr = '';
 
       for (const model of uniqueModels) {
         try {
           const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-          const res = await fetch(endpoint, {
+          let res = await fetch(endpoint, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': cleanKey
-            },
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+            body: JSON.stringify(requestPayload)
+          });
+
+          if (res.ok) {
+            activeAiModel = model;
+            return await res.json();
+          }
+
+          res = await fetch(`${endpoint}?key=${encodeURIComponent(cleanKey)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestPayload)
           });
 
@@ -671,15 +568,30 @@
 
           const errJson = await res.json().catch(() => ({}));
           lastErr = errJson.error ? errJson.error.message : `HTTP ${res.status}`;
-          if (lastErr.toLowerCase().includes('api key not valid')) {
-            throw new Error("This key was deactivated by Google. Please generate a fresh key at aistudio.google.com and paste it here.");
-          }
         } catch (err) {
           lastErr = err.message;
-          if (lastErr.includes('deactivated')) throw err;
         }
       }
       throw new Error(lastErr || "AI connection failed.");
+    }
+
+    // Skips internal 'thought' parts and extracts JSON cleanly
+    function parseGeminiJsonOutput(result) {
+      const parts = result?.candidates?.[0]?.content?.parts || [];
+      if (!parts.length) throw new Error("Empty AI response");
+      const nonThought = parts.filter(p => !p.thought && typeof p.text === 'string');
+      const combinedText = (nonThought.length ? nonThought : parts).map(p => p.text || '').join('\n');
+      const cleaned = combinedText.replace(/```json|```/g, '').trim();
+
+      const arrMatch = cleaned.match(/\[[\s\S]*\]/);
+      const objMatch = cleaned.match(/\{[\s\S]*\}/);
+      if (arrMatch && (!objMatch || arrMatch.index < objMatch.index)) {
+        return JSON.parse(arrMatch[0]);
+      }
+      if (objMatch) {
+        return JSON.parse(objMatch[0]);
+      }
+      return JSON.parse(cleaned);
     }
 
     async function testGeminiConnection() {
@@ -691,7 +603,7 @@
 
       if (!inputKey) {
         statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-red-100 text-red-800";
-        statusBox.innerText = "❌ Please paste a fresh key first.";
+        statusBox.innerText = "❌ Please paste your API key first.";
         return;
       }
 
@@ -705,14 +617,14 @@
         localStorage.setItem('sk_gemini_key', apiKey);
         updateEngineBanner();
         statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-emerald-100 text-emerald-800";
-        statusBox.innerText = `✅ Connected in ${elapsed}s! Key saved privately on your phone (${activeAiModel}).`;
+        statusBox.innerText = `✅ Connected in ${elapsed}s! (${activeAiModel}). Saved to phone.`;
       } catch (err) {
         statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-red-100 text-red-800";
         statusBox.innerText = `❌ ${err.message}`;
       }
     }
 
-    // ================= HIGH-SPEED BULK SCANNER (BATCH AI + SMART CROP ON-DEVICE OCR) =================
+    // ================= BULK RECEIPT & PDF SCANNER =================
     async function handleBulkFiles(event) {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -722,261 +634,318 @@
       const stopwatchText = document.getElementById('stopwatchText');
       const progBar = document.getElementById('scanProgressBar');
       alertBox.classList.remove('hidden');
-      progBar.style.width = '10%';
+      progBar.style.width = '15%';
 
       const startTime = performance.now();
       const timerInterval = setInterval(() => {
-        const secs = ((performance.now() - startTime) / 1000).toFixed(1);
-        stopwatchText.innerText = `Elapsed: ${secs}s`;
+        stopwatchText.innerText = `Elapsed: ${((performance.now() - startTime) / 1000).toFixed(1)}s`;
       }, 150);
 
-      statusText.innerText = `⚡Preparing ${files.length} receipts...`;
+      let completed = 0;
+      let lastScannedMonth = null;
 
-      // 1. Compress full proof + create smart-cropped OCR strip in parallel (< 0.4s)
-      const preparedList = await Promise.all(
-        files.map(file => prepareReceiptImages(file))
-      );
+      // Separate PDFs and Images
+      const pdfFiles = files.filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+      const imageFiles = files.filter(f => !pdfFiles.includes(f));
 
-      // 2. Create all cards immediately with exact file metadata Date & App name (< 0.2s)
-      const newRecords = preparedList.map((item, idx) => {
-        const rec = {
-          id: Date.now() + idx + Math.random(),
-          srNo: transactions.length + idx + 1,
-          amount: 0,
-          paidTo: `⏳ Scanning ${item.detectedApp}...`,
-          note: '',
-          utr: '...',
-          date: item.fileDate,
-          categoryId: 'cat_comp',
-          proofImage: item.displayBase64,
-          ocrStrip: item.ocrBase64,
-          isDuplicate: false
-        };
-        transactions.push(rec);
-        return rec;
-      });
-
-      await Promise.all(newRecords.map(r => dbPut(saveCleanRecord(r))));
-      renderUI();
-      progBar.style.width = '30%';
-
-      // 3A. If Valid Gemini Key Exists -> Use Multi-Image Batch Request (5 images per single API call!)
-      let usedCloudAi = false;
-      if (apiKey) {
+      // Handle PDF files via Gemini AI (extracts all pages/receipts inside the PDF!)
+      for (const pdfFile of pdfFiles) {
+        if (!apiKey) {
+          showToast("Please add your Google AI Key in Settings to scan PDF files!", "bg-amber-600");
+          continue;
+        }
+        statusText.innerText = `⚡ AI Reading PDF (${pdfFile.name})...`;
         try {
-          statusText.innerText = `⚡ Cloud AI Reading ${files.length} receipts in batch...`;
-          const BATCH_SIZE = 5;
-          for (let i = 0; i < newRecords.length; i += BATCH_SIZE) {
-            const batch = newRecords.slice(i, i + BATCH_SIZE);
-            const batchResults = await parseMultiBatchWithGemini(batch);
-            for (let j = 0; j < batch.length; j++) {
-              const rec = batch[j];
-              const ext = batchResults[j] || {};
-              applyExtractedData(rec, ext);
-              await dbPut(saveCleanRecord(rec));
-            }
-            progBar.style.width = `${30 + Math.round(((i + batch.length) / newRecords.length) * 70)}%`;
-            renderUI();
+          const pdfBase64 = await fileToRawBase64(pdfFile);
+          const items = await parseMediaWithGemini(pdfBase64, 'application/pdf', true);
+          const list = Array.isArray(items) ? items : [items];
+          for (const ext of list) {
+            const normDate = normalizeDateStr(ext.date, pdfFile.lastModified);
+            lastScannedMonth = normDate.substring(0, 7);
+            const rec = {
+              id: Date.now() + Math.random(),
+              srNo: transactions.length + 1,
+              amount: Number(ext.amount) || 0,
+              paidTo: (ext.paidTo || 'UPI Payment').trim(),
+              note: '',
+              utr: (ext.utr || 'N/A').trim(),
+              date: normDate,
+              categoryId: 'cat_comp',
+              proofImage: null,
+              isDuplicate: checkDuplicateUtr(ext.utr),
+              scanSource: '✨ AI PDF Scan'
+            };
+            transactions.push(rec);
+            await dbPut(rec);
           }
-          usedCloudAi = true;
-        } catch (aiErr) {
-          console.warn("Cloud AI batch fallback to On-Device Turbo:", aiErr);
+          renderUI();
+        } catch (err) {
+          showToast(`PDF Error: ${err.message}`, "bg-red-600");
         }
       }
 
-      // 3B. If No API Key (or Cloud AI failed) -> Use Pre-Warmed On-Device Parallel Workers
-      if (!usedCloudAi) {
-        statusText.innerText = `⚡ On-Device Turbo Reading ${files.length} receipts...`;
-        let doneCount = 0;
+      // Handle Image Screenshots in Parallel
+      if (imageFiles.length > 0) {
+        statusText.innerText = `⚡ Preparing ${imageFiles.length} screenshots...`;
+        const prepared = await Promise.all(imageFiles.map(f => prepareFullReceiptImage(f)));
 
-        // Ensure at least 1 worker is ready
-        if (ocrWorkerPool.length === 0) {
-          const w = await Tesseract.createWorker('eng');
-          ocrWorkerPool.push(w);
-        }
+        const newRecords = prepared.map((item, idx) => {
+          const rec = {
+            id: Date.now() + idx + Math.random(),
+            srNo: transactions.length + idx + 1,
+            amount: 0,
+            paidTo: '⏳ Reading receipt...',
+            note: '',
+            utr: '...',
+            date: item.fileDate,
+            categoryId: 'cat_comp',
+            proofImage: item.base64,
+            isDuplicate: false,
+            scanSource: ''
+          };
+          transactions.push(rec);
+          return rec;
+        });
 
-        const workerCount = ocrWorkerPool.length;
-        const chunks = Array.from({ length: workerCount }, () => []);
-        newRecords.forEach((rec, index) => chunks[index % workerCount].push(rec));
+        await Promise.all(newRecords.map(r => dbPut(r)));
+        renderUI();
 
-        await Promise.all(chunks.map(async (chunk, wIdx) => {
-          const worker = ocrWorkerPool[wIdx];
-          for (const rec of chunk) {
-            const ext = await extractWithWorker(worker, rec.ocrStrip);
-            applyExtractedData(rec, ext);
-            await dbPut(saveCleanRecord(rec));
-            doneCount++;
-            progBar.style.width = `${30 + Math.round((doneCount / newRecords.length) * 70)}%`;
-            statusText.innerText = `⚡ Scanned ${doneCount} of ${newRecords.length} receipts...`;
+        const CONCURRENCY = 4;
+        for (let i = 0; i < newRecords.length; i += CONCURRENCY) {
+          const batch = newRecords.slice(i, i + CONCURRENCY);
+          await Promise.all(batch.map(async (rec) => {
+            let ext = null;
+            let usedAi = false;
+
+            if (apiKey) {
+              try {
+                const res = await parseMediaWithGemini(rec.proofImage.split(',')[1], 'image/jpeg', false);
+                ext = Array.isArray(res) ? res[0] : res;
+                if (ext && (Number(ext.amount) > 0 || ext.paidTo)) usedAi = true;
+              } catch (e) {
+                console.warn("AI fallback to local parser:", e);
+              }
+            }
+
+            if (!usedAi) {
+              ext = await parseWithLocalPhonePeEngine(rec.proofImage);
+            }
+
+            rec.amount = Number(ext?.amount) || 0;
+            rec.paidTo = (ext?.paidTo || `UPI Payment #${rec.srNo}`).trim();
+            rec.utr = (ext?.utr || 'N/A').trim();
+            if (ext?.date) rec.date = normalizeDateStr(ext.date);
+            lastScannedMonth = rec.date.substring(0, 7);
+            rec.scanSource = usedAi ? '✨ AI Verified' : '📱 Local Scan';
+            rec.isDuplicate = checkDuplicateUtr(rec.utr, rec.id);
+
+            await dbPut(rec);
+            completed++;
+            progBar.style.width = `${20 + Math.round((completed / newRecords.length) * 80)}%`;
+            statusText.innerText = `⚡ Scanned ${completed} of ${newRecords.length} receipts...`;
             renderUI();
-          }
-        }));
+          }));
+        }
       }
 
       clearInterval(timerInterval);
       const totalSecs = ((performance.now() - startTime) / 1000).toFixed(1);
-      progBar.style.width = '100%';
-      statusText.innerText = `✅ Done! ${files.length} receipts processed in ${totalSecs}s`;
-      showToast(`Processed ${files.length} receipts in ${totalSecs}s!`, 'bg-emerald-600');
+      statusText.innerText = `✅ Done in ${totalSecs}s!`;
 
-      setTimeout(() => alertBox.classList.add('hidden'), 3500);
+      if (lastScannedMonth && /^\d{4}-\d{2}$/.test(lastScannedMonth)) {
+        document.getElementById('selectedMonth').value = lastScannedMonth;
+        renderUI();
+      }
+
+      showToast(`Finished scanning in ${totalSecs}s!`, 'bg-emerald-600');
+      setTimeout(() => alertBox.classList.add('hidden'), 3000);
       event.target.value = '';
     }
 
-    function saveCleanRecord(rec) {
-      const copy = { ...rec };
-      delete copy.ocrStrip;
-      return copy;
+    function checkDuplicateUtr(utr, excludeId = null) {
+      if (!utr || utr === 'N/A' || String(utr).length < 8) return false;
+      return transactions.some(t => t.id !== excludeId && t.utr === String(utr).trim());
     }
 
-    function applyExtractedData(rec, ext) {
-      rec.amount = Number(ext.amount) || 0;
-      rec.paidTo = (ext.paidTo && ext.paidTo !== 'UPI Vendor' ? ext.paidTo : `UPI Payment #${rec.srNo}`).trim();
-      rec.utr = (ext.utr || 'N/A').trim();
-      if (ext.date) rec.date = normalizeDateStr(ext.date);
-
-      if (rec.utr && rec.utr !== 'N/A' && rec.utr.length >= 8) {
-        const dup = transactions.find(t => t.id !== rec.id && t.utr === rec.utr);
-        if (dup) rec.isDuplicate = true;
-      }
-    }
-
-    // Multi-Image Batch Gemini Call (Sends up to 5 images in 1 single HTTP request -> 4 seconds total!)
-    async function parseMultiBatchWithGemini(batchRecords) {
-      const parts = [
-        { text: `You are an Indian UPI receipt parser. I am sending ${batchRecords.length} receipt images. Return strictly a JSON array of ${batchRecords.length} objects in the exact same order: [{"amount":number,"paidTo":"string","utr":"string","date":"YYYY-MM-DD"}]. Output raw JSON array only.` }
-      ];
-
-      batchRecords.forEach((rec, idx) => {
-        parts.push({ text: `Receipt ${idx + 1}:` });
-        parts.push({ inline_data: { mime_type: 'image/jpeg', data: rec.proofImage.split(',')[1] } });
+    function fileToRawBase64(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
       });
-
-      const res = await executeGeminiRequest(apiKey, { contents: [{ parts }] });
-      const raw = res.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [parsed];
     }
 
-    // Smart Image Cropper + Contrast Enhancer (Strips phone status bar & bottom ads for 3x faster OCR)
-    function prepareReceiptImages(file) {
+    async function parseMediaWithGemini(cleanBase64, mimeType, isMultiPagePdf = false) {
+      const prompt = isMultiPagePdf
+        ? `This PDF contains one or more Indian UPI payment screenshots (PhonePe, Google Pay, Paytm). Extract every transaction and return ONLY a JSON array of objects: [{"amount":number,"paidTo":"string","utr":"string","date":"YYYY-MM-DD"}]. Note: For PhonePe, 'utr' is the 12-digit number after 'UTR:', NOT the T26... Transaction ID. If top date is cropped, decode YYMMDD from T<YY><MM><DD> in the PhonePe Transaction ID.`
+        : `Analyze this Indian UPI payment screenshot (PhonePe, Google Pay, Paytm). Return ONLY a valid JSON object: {"amount":number,"paidTo":"string","utr":"string","date":"YYYY-MM-DD"}.
+Rules:
+1. "amount": exact number paid in INR (e.g. 2000, 1864, 1376).
+2. "paidTo": merchant or person name right below "Paid to" (e.g. "LAKSHMI YADAV", "BLINK COMMERCE PRIVATE...", "CRESCENT HOTEL").
+3. "utr": 12-digit number next to "UTR:" or "UPI Ref No" (e.g. "075195314133", NOT the T26... PhonePe ID).
+4. "date": YYYY-MM-DD format. If top date is missing, decode 20YY-MM-DD from the first 6 digits after T in the PhonePe Transaction ID (e.g. T261020... -> "2026-10-20").`;
+
+      const payload = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: mimeType, data: cleanBase64 } }
+          ]
+        }]
+      };
+
+      const res = await executeGeminiRequest(apiKey, payload);
+      return parseGeminiJsonOutput(res);
+    }
+
+    function prepareFullReceiptImage(file) {
       return new Promise((resolve) => {
         const fileDate = normalizeDateStr(null, file.lastModified);
-        const fname = (file.name || '').toLowerCase();
-        let detectedApp = 'UPI Receipt';
-        if (fname.includes('gpay') || fname.includes('google')) detectedApp = 'GPay';
-        else if (fname.includes('phonepe')) detectedApp = 'PhonePe';
-        else if (fname.includes('paytm')) detectedApp = 'Paytm';
-
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = (e) => {
           const img = new Image();
           img.src = e.target.result;
           img.onload = () => {
-            // 1. Display Image (600px)
-            const scale = Math.min(600 / img.width, 1);
-            const dispCanvas = document.createElement('canvas');
-            dispCanvas.width = img.width * scale;
-            dispCanvas.height = img.height * scale;
-            dispCanvas.getContext('2d').drawImage(img, 0, 0, dispCanvas.width, dispCanvas.height);
-            const displayBase64 = dispCanvas.toDataURL('image/jpeg', 0.65);
-
-            // 2. Smart Cropped OCR Strip (Crops out top 8% battery bar & bottom 18% ads, scales to 480px)
-            const cropY = img.height > img.width * 1.4 ? img.height * 0.08 : 0;
-            const cropH = img.height > img.width * 1.4 ? img.height * 0.74 : img.height;
-            const ocrScale = Math.min(480 / img.width, 1);
-
-            const ocrCanvas = document.createElement('canvas');
-            ocrCanvas.width = img.width * ocrScale;
-            ocrCanvas.height = cropH * ocrScale;
-            const oCtx = ocrCanvas.getContext('2d');
-            oCtx.filter = 'grayscale(100%) contrast(145%)';
-            oCtx.drawImage(img, 0, cropY, img.width, cropH, 0, 0, ocrCanvas.width, ocrCanvas.height);
-            const ocrBase64 = ocrCanvas.toDataURL('image/jpeg', 0.7);
-
-            resolve({ displayBase64, ocrBase64, fileDate, detectedApp });
+            const scale = Math.min(900 / img.width, 1);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve({ base64: canvas.toDataURL('image/jpeg', 0.78), fileDate });
           };
         };
       });
     }
 
-    // Fast On-Device UPI Regex Parser
-    async function extractWithWorker(worker, base64Strip) {
+    // ================= BULLETPROOF LOCAL PHONEPE / GPAY PARSER =================
+    async function parseWithLocalPhonePeEngine(base64Img) {
       try {
-        const ret = await worker.recognize(base64Strip);
+        if (!ocrWorker) {
+          ocrWorker = await Tesseract.createWorker('eng');
+        }
+        const ret = await ocrWorker.recognize(base64Img);
         const text = ret.data.text || '';
         const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
 
-        // 1. Extract Amount (Handles ₹1,250, Rs 500, or OCR reading '₹' as '7' or '?' or standalone big number above 'Paid to')
-        let amount = 0;
-        const currencyMatch = text.match(/(?:₹|Rs\.?|INR|\?)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-        if (currencyMatch) {
-          amount = parseFloat(currencyMatch[1].replace(/,/g, '')) || 0;
+        // 1. UTR: Strictly match 12 digits after 'UTR' or 'UPI Ref', ignoring 'T26...' PhonePe ID
+        let utr = 'N/A';
+        const utrMatch = text.match(/\b(?:UTR|UPI\s*Ref(?:\s*No\.?)?|UPI\s*Transaction\s*ID)[\s:.\-]*([0-9]{10,12})\b/i);
+        if (utrMatch) {
+          utr = utrMatch[1];
         } else {
-          // Look for standalone amount line near "Paid to" or "Completed"
-          for (let i = 0; i < Math.min(lines.length, 10); i++) {
-            const m = lines[i].match(/^[₹?7]?\s*([1-9][0-9,]{1,7}(?:\.[0-9]{2})?)$/);
-            if (m && !/^\d{10,12}$/.test(m[1].replace(/,/g, ''))) {
-              amount = parseFloat(m[1].replace(/,/g, '')) || 0;
+          const noPhonePeId = text.replace(/\bT[0-9]{16,26}\b/g, '');
+          const m12 = noPhonePeId.match(/\b([0-9]{12})\b/);
+          if (m12) utr = m12[1];
+        }
+
+        // 2. DATE: Explicit text date OR decoded from PhonePe T<YY><MM><DD> ID
+        let date = null;
+        const dMatch = text.match(/\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{4})\b/i);
+        if (dMatch) {
+          date = normalizeDateStr(dMatch[1]);
+        } else {
+          const tId = text.match(/\bT(2[0-9])(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{10,}\b/);
+          if (tId) date = `20${tId[1]}-${tId[2]}-${tId[3]}`;
+        }
+
+        // 3. VENDOR & AMOUNT
+        let paidTo = 'UPI Vendor';
+        let amount = 0;
+
+        // Helper to clean Tesseract misreading '₹' as '3', '7', or '2' in front of comma numbers (e.g. ₹2,000 -> 32,000)
+        function cleanOcrAmount(rawStr, hadExplicitRupeeSymbol) {
+          if (!rawStr) return 0;
+          let s = rawStr.trim();
+          if (!hadExplicitRupeeSymbol && /^[237]\d,\d{3}$/.test(s)) {
+            s = s.substring(1); // Strip fake leading digit created from '₹' glyph
+          }
+          return parseFloat(s.replace(/,/g, '')) || 0;
+        }
+
+        // Find 'Paid to' line (whole word only, never matching 'to' inside 'October')
+        const paidIdx = lines.findIndex(l => /^\b(?:paid\s+to|payment\s+to)\b/i.test(l));
+        if (paidIdx !== -1) {
+          // Scan next 1 to 3 lines to skip standalone arrow icon lines ('↗' or '7')
+          for (let k = paidIdx + 1; k <= Math.min(paidIdx + 3, lines.length - 1); k++) {
+            const candidate = lines[k];
+            if (/[A-Za-z]{3,}/.test(candidate) && !/@/.test(candidate)) {
+              let vLine = candidate;
+              const amtAtEnd = vLine.match(/\s+([₹\?%zZ]?\s*[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?|[₹\?%zZ]\s*[0-9]+)\s*[^0-9]*$/);
+              if (amtAtEnd) {
+                const token = amtAtEnd[1];
+                const hasSym = /[₹\?%zZ]/.test(token);
+                const numPart = token.replace(/[^0-9.,]/g, '');
+                amount = cleanOcrAmount(numPart, hasSym);
+                vLine = vLine.substring(0, amtAtEnd.index).trim();
+              }
+              vLine = vLine.replace(/^[^A-Za-z]+/, '').trim();
+              if (vLine.length >= 2) paidTo = vLine;
               break;
             }
           }
         }
 
-        // 2. Extract 12-Digit UTR / UPI Ref No
-        let utr = 'N/A';
-        const utrMatch = text.match(/(?:UPI\s*Ref|UTR|transaction\s*ID|Ref\s*No)[^0-9]*([0-9]{12})/i)
-                      || text.match(/\b([0-9]{12})\b/);
-        if (utrMatch) utr = utrMatch[1];
-
-        // 3. Extract Payee / Vendor Name
-        let paidTo = 'UPI Vendor';
-        const payeeMatch = text.match(/(?:Paid\s*to|To|Banking\s*name\s*:?)\s*[\n:]*\s*([A-Za-z][A-Za-z0-9\s&.]{2,28})/i);
-        if (payeeMatch) {
-          paidTo = payeeMatch[1].split('\n')[0].trim();
+        // Cross-check amount on 'XXXXXX8014 ₹2,000' line
+        const debLine = lines.find(l => /X{3,}\d{3,4}/i.test(l));
+        if (debLine) {
+          const mDeb = debLine.match(/X{3,}\d{3,4}\s+([₹\?%zZ]?\s*[0-9]{1,3}(?:,[0-9]{3})+(?:\.[0-9]{2})?|[₹\?%zZ]?\s*[1-9][0-9]{1,5})/i);
+          if (mDeb) {
+            const token = mDeb[1];
+            const hasSym = /[₹\?%zZ]/.test(token);
+            const numPart = token.replace(/[^0-9.,]/g, '');
+            const debAmt = cleanOcrAmount(numPart, hasSym);
+            if (debAmt > 0 && (amount === 0 || debAmt < amount)) {
+              amount = debAmt;
+            }
+          }
         }
 
-        return { amount, utr, paidTo };
+        return { amount, utr, paidTo, date };
       } catch (e) {
-        return { amount: 0, utr: 'N/A', paidTo: 'UPI Payment' };
+        return { amount: 0, utr: 'N/A', paidTo: 'UPI Payment', date: null };
       }
     }
 
-    // ================= 1-TAP INLINE CARD EDITING & VOICE INPUT =================
+    async function rescanSingleCard(id) {
+      const txn = transactions.find(t => t.id === id);
+      if (!txn || !txn.proofImage) return;
+      if (!apiKey) {
+        openSettingsModal();
+        return showToast("Please paste your Google AI key in Settings first", "bg-amber-600");
+      }
+
+      showToast(`⚡ Re-scanning #${txn.srNo} with Gemini AI...`, "bg-blue-600");
+      try {
+        const res = await parseMediaWithGemini(txn.proofImage.split(',')[1], 'image/jpeg', false);
+        const ext = Array.isArray(res) ? res[0] : res;
+        if (ext) {
+          txn.amount = Number(ext.amount) || txn.amount;
+          txn.paidTo = (ext.paidTo || txn.paidTo).trim();
+          txn.utr = (ext.utr || txn.utr).trim();
+          if (ext.date) txn.date = normalizeDateStr(ext.date);
+          txn.scanSource = '✨ AI Verified';
+          txn.isDuplicate = checkDuplicateUtr(txn.utr, txn.id);
+          await dbPut(txn);
+          renderUI();
+          showToast(`✅ Updated #${txn.srNo}: ${txn.paidTo} — ₹${txn.amount}`, "bg-emerald-600");
+        }
+      } catch (err) {
+        showToast(`❌ AI Error: ${err.message}`, "bg-red-600");
+      }
+    }
+
     async function updateInlineField(id, field, rawValue) {
       const txn = transactions.find(t => t.id === id);
       if (!txn) return;
-
-      if (field === 'amount') {
-        const cleanNum = parseFloat(String(rawValue).replace(/[^0-9.]/g, '')) || 0;
-        txn.amount = cleanNum;
-      } else if (field === 'paidTo') {
-        txn.paidTo = String(rawValue).trim() || txn.paidTo;
-      } else if (field === 'note') {
-        txn.note = String(rawValue).trim();
-      }
-
+      if (field === 'amount') txn.amount = parseFloat(String(rawValue).replace(/[^0-9.]/g, '')) || 0;
+      else if (field === 'paidTo') txn.paidTo = String(rawValue).trim() || txn.paidTo;
+      else if (field === 'note') txn.note = String(rawValue).trim();
       await dbPut(txn);
       renderUI();
       showToast('Saved!', 'bg-emerald-600');
     }
 
-    function startVoiceInput(targetInputId) {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRec) return showToast("Voice input not supported on this browser", "bg-amber-600");
-      const rec = new SpeechRec();
-      rec.lang = 'en-IN';
-      showToast("🎤 Listening... Speak now", "bg-blue-600");
-      rec.onresult = (e) => {
-        const spoken = e.results[0][0].transcript;
-        document.getElementById(targetInputId).value = spoken;
-        showToast(`Heard: "${spoken}"`, "bg-emerald-600");
-      };
-      rec.start();
-    }
-
-    // Lightbox
     function openLightbox(id) {
       const txn = transactions.find(t => t.id === id);
       if (!txn || !txn.proofImage) return;
@@ -987,50 +956,29 @@
     }
     function closeLightbox() { document.getElementById('imageLightbox').classList.add('hidden'); }
 
-    // Filter Chips
     function renderFilterChips() {
       const container = document.getElementById('filterChipsContainer');
       container.innerHTML = `
-        <button onclick="setFilter('ALL')" 
-          class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'ALL' ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">
-          All
-        </button>
-        <button onclick="setFilter('CLAIMABLE_ONLY')" 
-          class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'CLAIMABLE_ONLY' ? 'bg-emerald-700 text-white shadow' : 'bg-white border border-emerald-400 text-emerald-700'}">
-          ⭐ All Claimable
-        </button>
+        <button onclick="setFilter('ALL')" class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'ALL' ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">All</button>
+        <button onclick="setFilter('CLAIMABLE_ONLY')" class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'CLAIMABLE_ONLY' ? 'bg-emerald-700 text-white shadow' : 'bg-white border border-emerald-400 text-emerald-700'}">⭐ All Claimable</button>
       `;
-
       categories.forEach(c => {
         const isSel = currentFilter === c.id;
         container.innerHTML += `
-          <button onclick="setFilter('${c.id}')" 
-            class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${isSel ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">
-            ${c.name}
-          </button>
+          <button onclick="setFilter('${c.id}')" class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${isSel ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">${c.name}</button>
         `;
       });
     }
 
-    function setFilter(f) {
-      currentFilter = f;
-      renderFilterChips();
-      renderUI();
-    }
-
-    function clearSearch() {
-      document.getElementById('searchInput').value = '';
-      renderUI();
-    }
-
-    // Manual Entry & Edit Modal
+    function setFilter(f) { currentFilter = f; renderFilterChips(); renderUI(); }
+    function clearSearch() { document.getElementById('searchInput').value = ''; renderUI(); }
     function setQuickNote(text) { document.getElementById('txnNote').value = text; }
 
     async function handleManualPhotoSelect(event) {
       const file = event.target.files[0];
       if (!file) return;
-      const prep = await prepareReceiptImages(file);
-      manualTempPhoto = prep.displayBase64;
+      const prep = await prepareFullReceiptImage(file);
+      manualTempPhoto = prep.base64;
       document.getElementById('manualPhotoPreview').src = manualTempPhoto;
       document.getElementById('manualPhotoPreviewWrap').classList.remove('hidden');
     }
@@ -1041,9 +989,7 @@
       document.getElementById('manualPhotoPreviewWrap').classList.add('hidden');
 
       const select = document.getElementById('txnCategorySelect');
-      select.innerHTML = categories.map(c => `
-        <option value="${c.id}">${c.name} ${c.isClaimable ? '(⭐ Claimable)' : ''}</option>
-      `).join('');
+      select.innerHTML = categories.map(c => `<option value="${c.id}">${c.name} ${c.isClaimable ? '(⭐ Claimable)' : ''}</option>`).join('');
 
       if (editId) {
         const txn = transactions.find(t => t.id === editId);
@@ -1071,7 +1017,6 @@
         document.getElementById('txnUtr').value = '';
         document.getElementById('txnCategorySelect').value = categories[0].id;
       }
-
       document.getElementById('txnModal').classList.remove('hidden');
     }
 
@@ -1087,7 +1032,7 @@
       const editId = document.getElementById('editTxnId').value;
 
       if (isNaN(amount) || amount < 0) return showToast('Please enter a valid amount', 'bg-red-600');
-      if (!paidTo) return showToast('Please enter Vendor / Recipient name', 'bg-red-600');
+      if (!paidTo) return showToast('Please enter Vendor name', 'bg-red-600');
 
       if (editId) {
         const txn = transactions.find(t => String(t.id) === String(editId));
@@ -1100,26 +1045,26 @@
           txn.categoryId = categoryId;
           if (manualTempPhoto) txn.proofImage = manualTempPhoto;
           await dbPut(txn);
-          showToast(`Updated Record #${txn.srNo}`, 'bg-emerald-600');
+          showToast(`Updated #${txn.srNo}`, 'bg-emerald-600');
         }
       } else {
         const newTxn = {
           id: Date.now() + Math.random(),
           srNo: transactions.length + 1,
-          amount: amount,
-          paidTo: paidTo,
-          note: note,
-          utr: utr,
-          date: date,
-          categoryId: categoryId,
+          amount,
+          paidTo,
+          note,
+          utr,
+          date,
+          categoryId,
           proofImage: manualTempPhoto,
-          isDuplicate: false
+          isDuplicate: checkDuplicateUtr(utr),
+          scanSource: '✍️ Manual'
         };
         transactions.push(newTxn);
         await dbPut(newTxn);
         showToast('Expense saved!', 'bg-emerald-600');
       }
-
       closeTxnModal();
       renderUI();
     }
@@ -1133,19 +1078,36 @@
       }
     }
 
-    // Delete Flow
     function promptDeleteTxn(id) {
       pendingDeleteId = id;
       const txn = transactions.find(t => t.id === id);
+      document.getElementById('deleteModalTitle').innerText = 'Delete Transaction?';
       if (txn) document.getElementById('deleteConfirmDesc').innerText = `Remove Sr. #${txn.srNo} (${txn.paidTo} - ₹${txn.amount})?`;
       document.getElementById('deleteConfirmModal').classList.remove('hidden');
     }
+
+    function clearAllTransactions() {
+      pendingDeleteId = 'CLEAR_ALL';
+      document.getElementById('deleteModalTitle').innerText = 'Clear All Transactions?';
+      document.getElementById('deleteConfirmDesc').innerText = 'This will wipe all recorded transactions so you can start fresh.';
+      document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
     function closeDeleteModal() {
       pendingDeleteId = null;
       document.getElementById('deleteConfirmModal').classList.add('hidden');
     }
+
     async function confirmDeleteTxn() {
       if (!pendingDeleteId) return;
+      if (pendingDeleteId === 'CLEAR_ALL') {
+        await dbClearAll();
+        transactions = [];
+        closeDeleteModal();
+        closeSettingsModal();
+        renderUI();
+        return showToast('All transactions cleared!', 'bg-emerald-600');
+      }
       await dbDelete(pendingDeleteId);
       transactions = transactions.filter(t => t.id !== pendingDeleteId);
       transactions.forEach((t, i) => t.srNo = i + 1);
@@ -1155,7 +1117,6 @@
       showToast('Deleted', 'bg-slate-800');
     }
 
-    // Render Main UI with 1-Tap Inline Editable Fields
     function renderUI() {
       const container = document.getElementById('transactionsContainer');
       container.innerHTML = '';
@@ -1204,8 +1165,8 @@
         container.innerHTML = `
           <div class="text-center py-12 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
             <p class="text-4xl">📂</p>
-            <p class="mt-2 text-sm font-bold text-slate-700">No transactions to show</p>
-            <p class="text-xs text-slate-400 mt-0.5">Tap 'Bulk UPI Scan' or 'Manual Entry' above.</p>
+            <p class="mt-2 text-sm font-bold text-slate-700">No transactions in this month view</p>
+            <p class="text-xs text-slate-400 mt-0.5">Tap 'Scan Receipts' to upload screenshots or PDFs.</p>
           </div>
         `;
         return;
@@ -1227,32 +1188,33 @@
             <div class="flex items-start gap-2.5 flex-1 min-w-0">
               <span class="bg-slate-900 text-white text-xs font-black px-2 py-1 rounded-md mt-0.5 shrink-0">#${t.srNo}</span>
               <div class="flex-1 min-w-0">
-                <!-- 1-Tap Inline Editable Vendor Name -->
                 <input type="text" value="${t.paidTo.replace(/"/g, '&quot;')}" 
                        onchange="updateInlineField(${t.id}, 'paidTo', this.value)"
                        class="inline-input font-black text-slate-900 text-base w-full bg-transparent truncate border-b border-transparent hover:border-slate-300" />
                 
-                ${t.isDuplicate ? `<span class="inline-block bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-red-300 mt-0.5">⚠️ DUPLICATE UTR</span>` : ''}
+                <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
+                  ${t.scanSource ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${t.scanSource.includes('AI') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600'}">${t.scanSource}</span>` : ''}
+                  ${t.isDuplicate ? `<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-red-300">⚠️ DUPLICATE UTR</span>` : ''}
+                </div>
 
-                <!-- 1-Tap Inline Editable Site Note -->
                 <input type="text" value="${(t.note || '').replace(/"/g, '&quot;')}" placeholder="+ Tap to add site note (e.g. Cement, Fuel)..."
                        onchange="updateInlineField(${t.id}, 'note', this.value)"
-                       class="inline-input text-xs font-bold text-blue-700 w-full bg-transparent mt-0.5 placeholder:text-slate-400 placeholder:font-normal" />
+                       class="inline-input text-xs font-bold text-blue-700 w-full bg-transparent mt-1 placeholder:text-slate-400 placeholder:font-normal" />
 
                 <p class="text-[11px] text-slate-400 font-mono mt-0.5">UTR: ${t.utr} • ${t.date}</p>
               </div>
             </div>
 
             <div class="text-right shrink-0">
-              <!-- 1-Tap Inline Editable Amount -->
               <div class="flex items-center justify-end">
                 <span class="text-base font-black text-slate-500 mr-0.5">₹</span>
                 <input type="number" step="any" value="${t.amount}" 
                        onchange="updateInlineField(${t.id}, 'amount', this.value)"
                        class="inline-input w-24 text-right text-lg font-black ${t.amount === 0 ? 'text-amber-600 bg-amber-50 px-1 rounded border border-amber-300' : 'text-slate-900 bg-transparent'}" />
               </div>
-              <div class="flex gap-2.5 justify-end mt-1.5 text-xs font-bold">
-                <button onclick="openManualModal(${t.id})" class="text-blue-600">✏️ Full Edit</button>
+              <div class="flex gap-2 justify-end mt-1.5 text-xs font-bold">
+                ${t.proofImage ? `<button onclick="rescanSingleCard(${t.id})" class="text-emerald-700">🔄 AI</button>` : ''}
+                <button onclick="openManualModal(${t.id})" class="text-blue-600">✏️ Edit</button>
                 <button onclick="promptDeleteTxn(${t.id})" class="text-red-500">🗑️</button>
               </div>
             </div>
@@ -1279,7 +1241,6 @@
       });
     }
 
-    // Monthly Claim Report & Exports
     function getMonthClaimableList() {
       const selMonth = document.getElementById('selectedMonth').value;
       return transactions.filter(t => {
@@ -1331,7 +1292,7 @@
             ${t.note ? `<p class="text-[10px] font-bold text-slate-600 mb-1">Purpose: ${t.note}</p>` : ''}
             ${t.proofImage ? `
               <img src="${t.proofImage}" class="max-h-72 mx-auto rounded border object-contain mt-1" />
-            ` : `<div class="py-8 text-xs text-slate-400 italic">Cash / Manual Entry (No photo attached)</div>`}
+            ` : `<div class="py-8 text-xs text-slate-400 italic">PDF / Manual Entry</div>`}
             <p class="text-[10px] font-mono text-slate-500 mt-1">Date: ${t.date} | UTR: ${t.utr}</p>
           </div>
         `;
@@ -1425,7 +1386,6 @@
       reader.readAsText(file);
     }
 
-    // Categories
     function openCategoryModal() {
       renderCategoryModalList();
       document.getElementById('categoryModal').classList.remove('hidden');
@@ -1456,8 +1416,8 @@
 
       categories.push({
         id: 'cust_' + Date.now(),
-        name: name,
-        isClaimable: isClaimable,
+        name,
+        isClaimable,
         badgeClass: isClaimable ? 'bg-emerald-700 text-white' : 'bg-slate-700 text-white'
       });
       localStorage.setItem('sk_cats', JSON.stringify(categories));
@@ -1476,7 +1436,6 @@
       renderUI();
     }
 
-    // Settings
     function openSettingsModal() {
       document.getElementById('settingsNameInput').value = userName;
       document.getElementById('settingsApiKeyInput').value = apiKey;
@@ -1497,4 +1456,3 @@
     }
   </script>
 </body>
-</html>
