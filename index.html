@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="manifest" href="./manifest.json" />
+  <title>SiteKhata Pro - PM Expense & Claim Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .touch-btn { min-height: 46px; }
+    @media print {
+      body * { visibility: hidden; }
+      #printableReport, #printableReport * { visibility: visible; }
+      #printableReport { position: absolute; left: 0; top: 0; width: 100%; display: block !important; padding: 0; margin: 0; }
+      .no-print { display: none !important; }
+      .proof-card { break-inside: avoid; page-break-inside: avoid; margin-bottom: 20px; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-900 pb-32">
+
+  <!-- ================= TOAST NOTIFICATION (REPLACES BLOCKED ALERTS) ================= -->
+  <div id="toastBanner" class="fixed top-12 left-1/2 -translate-x-1/2 z-[100] hidden px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs text-white bg-slate-900 border border-slate-700 transition-all max-w-xs text-center">
+    Notification
+  </div>
+
+  <!-- ================= 1. PWA INSTALL BANNER ================= -->
+  <div id="installAppBanner" class="hidden bg-blue-600 text-white px-4 py-2.5 flex items-center justify-between shadow-md sticky top-0 z-50 no-print">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">📲</span>
+      <div>
+        <p class="text-xs font-black leading-tight">Install SiteKhata App</p>
+        <p class="text-[10px] text-blue-100 leading-tight">Add icon to your Moto home screen</p>
+      </div>
+    </div>
+    <button onclick="triggerInstallPrompt()" class="bg-white text-blue-700 px-3 py-1.5 rounded-lg text-xs font-black shadow">
+      Install
+    </button>
+  </div>
+
+  <!-- ================= 2. TOP STATUS BAR ================= -->
+  <div id="networkStatusBar" class="bg-emerald-700 text-white text-[11px] font-bold py-1.5 px-4 text-center flex items-center justify-between sticky top-0 z-40 no-print">
+    <div class="flex items-center gap-1.5 mx-auto">
+      <span id="networkIcon">⚡</span>
+      <span id="networkText">Gemini 4 Argon Turbo Engine Active</span>
+    </div>
+  </div>
+
+  <!-- ================= 3. NO-VERIFICATION LOGIN MODAL ================= -->
+  <div id="loginModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+      <div class="text-5xl">👷‍♂️</div>
+      <div>
+        <h2 class="text-2xl font-black text-slate-800">SiteKhata Pro</h2>
+        <p class="text-slate-500 text-xs mt-1">Daily Site Expense & Company Claim Tracker</p>
+      </div>
+      <div>
+        <label class="block text-left text-xs font-bold text-slate-600 mb-1">ENTER YOUR NAME</label>
+        <input type="text" id="loginNameInput" placeholder="e.g. Ramesh Sharma" 
+               class="w-full px-4 py-3 text-lg border-2 border-slate-300 rounded-xl focus:outline-blue-600 font-bold" />
+      </div>
+      <button onclick="handleLogin()" 
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 text-base rounded-xl shadow-lg touch-btn">
+        Open My Khata ➔
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 4. CUSTOM LOGOUT CONFIRMATION MODAL ================= -->
+  <div id="logoutConfirmModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+      <div class="text-4xl">🚪</div>
+      <h3 class="text-xl font-black text-slate-800">Log Out / Switch User?</h3>
+      <p class="text-xs text-slate-500">All your recorded transactions and receipt images will stay safely stored on your phone.</p>
+      <div class="space-y-2 pt-2">
+        <button onclick="executeLogout()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl text-sm shadow">
+          Yes, Log Out Now
+        </button>
+        <button onclick="closeLogoutConfirm()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl text-sm">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 5. CUSTOM DELETE CONFIRMATION MODAL ================= -->
+  <div id="deleteConfirmModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl text-center space-y-4">
+      <div class="text-4xl">🗑️</div>
+      <h3 class="text-lg font-black text-slate-800">Delete This Transaction?</h3>
+      <p class="text-xs text-slate-500" id="deleteConfirmDesc">This entry will be removed and Sr. No. will be re-indexed.</p>
+      <div class="flex gap-2 pt-2">
+        <button onclick="confirmDeleteTxn()" class="flex-1 bg-red-600 text-white font-bold py-3 rounded-xl text-sm shadow">
+          Delete
+        </button>
+        <button onclick="closeDeleteModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 6. FULL-SCREEN RECEIPT ZOOM LIGHTBOX ================= -->
+  <div id="imageLightbox" class="fixed inset-0 bg-black/95 z-50 flex flex-col items-center justify-between p-4 hidden no-print">
+    <div class="w-full flex justify-between items-center text-white pb-2">
+      <span id="lightboxCaption" class="text-sm font-bold truncate">Receipt Proof</span>
+      <button onclick="closeLightbox()" class="bg-white/20 px-4 py-1.5 rounded-full text-sm font-black">&times; Close</button>
+    </div>
+    <div class="flex-1 flex items-center justify-center overflow-auto w-full">
+      <img id="lightboxImg" class="max-h-[80vh] max-w-full object-contain rounded-lg" />
+    </div>
+    <div id="lightboxSub" class="text-xs text-slate-300 font-mono pt-2 text-center"></div>
+  </div>
+
+  <!-- ================= 7. HEADER ================= -->
+  <header class="bg-slate-900 text-white p-4 shadow-md no-print">
+    <div class="max-w-xl mx-auto flex items-center justify-between">
+      <div>
+        <h1 class="text-lg font-black tracking-wide flex items-center gap-1.5">
+          <span>📋</span> SiteKhata <span class="text-[10px] bg-blue-600 px-1.5 py-0.5 rounded font-bold">PRO</span>
+        </h1>
+        <p class="text-xs text-slate-400">Manager: <span id="headerUserName" class="text-white font-bold"></span></p>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button onclick="openCategoryModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">
+          🏷️ Tags
+        </button>
+        <button onclick="openSettingsModal()" class="bg-slate-800 hover:bg-slate-700 px-2.5 py-2 rounded-lg text-xs font-bold text-slate-200 border border-slate-700">
+          ⚙️ Settings
+        </button>
+        <button onclick="showLogoutConfirm()" class="bg-red-900/80 hover:bg-red-800 px-2.5 py-2 rounded-lg text-xs font-bold text-red-100 border border-red-700">
+          🚪 Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 8. MAIN DASHBOARD ================= -->
+  <main class="max-w-xl mx-auto p-4 space-y-4 no-print">
+
+    <!-- Month Selector & Summary Banner -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="text-[11px] font-black text-slate-500 uppercase tracking-wider block">Viewing Month</label>
+          <span class="text-[10px] text-slate-400" id="totalMonthCountText">0 total records</span>
+        </div>
+        <input type="month" id="selectedMonth" onchange="renderUI()" 
+               class="border-2 border-slate-300 rounded-xl px-3 py-1.5 text-sm font-black text-slate-800 focus:outline-blue-600" />
+      </div>
+
+      <!-- Claimable Total Card -->
+      <div class="bg-emerald-600 text-white p-4 rounded-xl shadow-md">
+        <div class="flex justify-between items-start">
+          <span class="text-xs uppercase font-bold tracking-wider opacity-90">🏢 Total Claimable from Company</span>
+          <span id="claimCountBadge" class="bg-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">0 bills</span>
+        </div>
+        <div class="text-3xl font-black mt-1" id="totalClaimableDisplay">₹0</div>
+        <div class="flex justify-between items-center mt-2 pt-2 border-t border-emerald-500/50 text-[11px]">
+          <span id="nonClaimableDisplay">Non-Claimable / Personal: ₹0</span>
+          <button onclick="shareWhatsAppSummary()" class="bg-white text-emerald-800 font-black px-2.5 py-1 rounded-lg shadow-sm">
+            📲 WhatsApp Summary
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary Action Buttons -->
+    <div class="grid grid-cols-3 gap-2">
+      <label class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition touch-btn">
+        <span class="text-2xl">📸</span>
+        <span class="font-black text-xs mt-1">Scan UPI Gallery</span>
+        <span class="text-[9px] opacity-85">(Select 10–40 Photos)</span>
+        <input type="file" id="bulkInput" multiple accept="image/*" class="hidden" onchange="handleBulkFiles(event)" />
+      </label>
+
+      <button onclick="openManualModal()" class="bg-slate-800 hover:bg-slate-700 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition touch-btn">
+        <span class="text-2xl">➕</span>
+        <span class="font-black text-xs mt-1">Manual Entry</span>
+        <span class="text-[9px] opacity-85">(Cash / Paper Bill)</span>
+      </button>
+
+      <button onclick="openMonthlyProofReport()" class="bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl p-3 flex flex-col items-center justify-center text-center shadow-md active:scale-95 transition touch-btn">
+        <span class="text-2xl">📄</span>
+        <span class="font-black text-xs mt-1">Claim Sheet</span>
+        <span class="text-[9px] opacity-85">(PDF + Proofs)</span>
+      </button>
+    </div>
+
+    <!-- Scanner Live Stopwatch & Progress Box -->
+    <div id="processingAlert" class="hidden bg-amber-100 border-2 border-amber-400 p-3.5 rounded-xl text-center text-amber-900 font-bold text-xs shadow">
+      <div id="processingStatusText">⚡ Gemini 4 Argon Parallel Scan...</div>
+      <p class="text-[11px] font-mono text-amber-800 mt-1" id="stopwatchText">Elapsed: 0.0s</p>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="relative">
+      <input type="text" id="searchInput" oninput="renderUI()" placeholder="🔍 Search vendor, note, amount, or UTR..." 
+             class="w-full pl-4 pr-9 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold focus:outline-blue-600 shadow-sm" />
+      <button onclick="clearSearch()" class="absolute right-3 top-2.5 text-slate-400 text-sm font-bold">✕</button>
+    </div>
+
+    <!-- Category Filter Chips -->
+    <div class="flex gap-1.5 overflow-x-auto pb-1 text-xs font-bold" id="filterChipsContainer"></div>
+
+    <!-- Transaction Cards List -->
+    <div class="space-y-3" id="transactionsContainer"></div>
+
+  </main>
+
+  <!-- ================= 9. SETTINGS & AI CONFIG MODAL ================= -->
+  <div id="settingsModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-black text-slate-800 text-base">Settings & AI Engine</h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-600 uppercase">Your Name (Appears on Claim Sheet)</label>
+        <input type="text" id="settingsNameInput" class="w-full p-2.5 border-2 rounded-xl text-sm font-bold mt-1" />
+      </div>
+
+      <!-- Gemini 4 Argon Key Box -->
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+        <div class="flex justify-between items-center">
+          <label class="block text-xs font-black text-slate-700 uppercase">Google AI Key</label>
+          <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">Gemini 4 Argon</span>
+        </div>
+        <p class="text-[10px] text-slate-500 leading-tight">Pre-loaded with your AQ. key and automatic model discovery.</p>
+        <input type="text" id="settingsApiKeyInput" placeholder="Paste AQ. or AIza key" class="w-full p-2 border-2 rounded-xl text-xs font-mono" />
+        
+        <button onclick="testGeminiConnection()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-1.5">
+          <span>⚡</span> Test Gemini 4 Argon Connection
+        </button>
+        <div id="apiTestStatus" class="hidden text-[11px] font-bold p-2.5 rounded-lg text-center leading-normal"></div>
+      </div>
+
+      <!-- Backup & Restore -->
+      <div class="border-t pt-3 space-y-2">
+        <label class="block text-xs font-bold text-slate-600 uppercase">Phone Backup & Excel</label>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="downloadJsonBackup()" class="bg-slate-800 text-white text-xs font-bold py-2.5 rounded-lg">
+            💾 Save Backup File
+          </button>
+          <label class="bg-slate-200 text-slate-800 text-xs font-bold py-2.5 rounded-lg text-center cursor-pointer flex items-center justify-center">
+            📂 Restore Backup
+            <input type="file" accept=".json" class="hidden" onchange="restoreJsonBackup(event)" />
+          </label>
+        </div>
+      </div>
+
+      <div class="pt-2 border-t">
+        <button onclick="showLogoutConfirm()" class="w-full bg-red-100 text-red-700 border border-red-300 font-bold py-2.5 rounded-xl text-xs">
+          🚪 Log Out / Switch User
+        </button>
+      </div>
+
+      <div class="pt-2 border-t flex gap-2">
+        <button onclick="saveSettings()" class="flex-1 bg-blue-600 text-white font-bold py-2.5 rounded-xl text-xs">Save Changes</button>
+        <button onclick="closeSettingsModal()" class="flex-1 bg-slate-200 text-slate-800 font-bold py-2.5 rounded-xl text-xs">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 10. MANUAL ENTRY & EDIT MODAL ================= -->
+  <div id="txnModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-3 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-black text-slate-800 text-base" id="modalTitle">Add Expense</h3>
+        <button onclick="closeTxnModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <input type="hidden" id="editTxnId" />
+
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 uppercase">Amount (₹) *</label>
+        <input type="number" step="any" id="txnAmount" placeholder="e.g. 2450" 
+               class="w-full p-2.5 border-2 rounded-xl text-xl font-black focus:outline-blue-600" />
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 uppercase">Paid To (Vendor / Person) *</label>
+        <input type="text" id="txnPaidTo" placeholder="e.g. Mahalaxmi Hardware" 
+               class="w-full p-2.5 border-2 rounded-xl text-sm font-bold focus:outline-blue-600" />
+      </div>
+
+      <!-- Site Note / Remark with Quick Chips -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 uppercase">Site Purpose / Remark (For Accounts)</label>
+        <input type="text" id="txnNote" placeholder="e.g. 10 Bags Cement / JCB Fuel / Labour Tea" 
+               class="w-full p-2 border-2 rounded-xl text-xs font-bold focus:outline-blue-600 mt-0.5" />
+        <div class="flex gap-1 flex-wrap mt-1.5">
+          <button type="button" onclick="setQuickNote('Site Material')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Material</button>
+          <button type="button" onclick="setQuickNote('Labour Expense')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Labour</button>
+          <button type="button" onclick="setQuickNote('Diesel / Fuel')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Fuel</button>
+          <button type="button" onclick="setQuickNote('Transport / Freight')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Transport</button>
+          <button type="button" onclick="setQuickNote('Food / Tea')" class="text-[10px] bg-slate-100 border px-2 py-0.5 rounded font-bold">+ Tea/Food</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase">Date *</label>
+          <input type="date" id="txnDate" class="w-full p-2 border-2 rounded-xl text-xs font-bold" />
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-slate-600 uppercase">UTR / Bill No.</label>
+          <input type="text" id="txnUtr" placeholder="12-digit UTR" class="w-full p-2 border-2 rounded-xl text-xs font-bold" />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-[11px] font-bold text-slate-600 uppercase">Category *</label>
+        <select id="txnCategorySelect" class="w-full p-2.5 border-2 rounded-xl text-xs font-bold bg-white focus:outline-blue-600"></select>
+      </div>
+
+      <!-- Restored Photo Attachment -->
+      <div class="bg-slate-50 p-2.5 rounded-xl border">
+        <label class="block text-[11px] font-bold text-slate-600 uppercase">Attach / Change Bill Photo</label>
+        <input type="file" id="txnPhotoInput" accept="image/*" class="w-full text-xs text-slate-500 mt-1" onchange="handleManualPhotoSelect(event)" />
+        <div id="manualPhotoPreviewWrap" class="mt-2 hidden flex items-center gap-2">
+          <img id="manualPhotoPreview" class="h-14 w-14 object-cover rounded border" />
+          <span class="text-[10px] text-emerald-700 font-bold">✓ Photo Attached</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveManualTxn()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-sm shadow">
+          Save Record
+        </button>
+        <button onclick="closeTxnModal()" class="flex-1 bg-slate-200 text-slate-700 font-bold py-3 rounded-xl text-sm">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 11. CATEGORY MANAGER MODAL ================= -->
+  <div id="categoryModal" class="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl space-y-4">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-black text-slate-800 text-base">Expense Categories</h3>
+        <button onclick="closeCategoryModal()" class="text-slate-400 text-2xl font-bold leading-none">&times;</button>
+      </div>
+
+      <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+        <label class="block text-[11px] font-black text-slate-600 uppercase">Create New Category</label>
+        <input type="text" id="newCategoryName" placeholder="e.g. Site Petty Cash, Machinery" class="w-full p-2 border-2 rounded-lg text-xs font-bold" />
+        
+        <label class="flex items-center gap-2 pt-1 cursor-pointer">
+          <input type="checkbox" id="newCategoryIsClaimable" checked class="w-4 h-4 text-emerald-600 rounded" />
+          <span class="text-xs font-bold text-slate-700">Claimable from Company?</span>
+        </label>
+
+        <button onclick="saveNewCategory()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded-lg text-xs">
+          + Add Category
+        </button>
+      </div>
+
+      <div class="max-h-52 overflow-y-auto space-y-1.5" id="categoryListContainer"></div>
+
+      <button onclick="closeCategoryModal()" class="w-full bg-slate-200 text-slate-800 font-bold py-2.5 rounded-xl text-xs">Done</button>
+    </div>
+  </div>
+
+  <!-- ================= 12. PRINTABLE MONTHLY CLAIM REPORT (WITH PROOFS) ================= -->
+  <div id="printableReport" class="hidden p-6 md:p-8 bg-white text-slate-900 min-h-screen">
+    <!-- Top Action Bar (Hidden when printing) -->
+    <div class="mb-6 p-3 bg-slate-900 text-white rounded-xl flex flex-wrap gap-2 items-center justify-between no-print">
+      <span class="text-xs font-bold">📄 Monthly Claim Sheet Preview</span>
+      <div class="flex gap-2">
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
+          🖨️ Print / Save as PDF
+        </button>
+        <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-lg text-xs shadow">
+          📥 Download Excel
+        </button>
+        <button onclick="closeReport()" class="bg-slate-700 text-white font-bold px-3 py-2 rounded-lg text-xs">
+          ✕ Close
+        </button>
+      </div>
+    </div>
+
+    <!-- Voucher Header -->
+    <div class="flex justify-between items-start border-b-2 border-slate-900 pb-3 mb-4">
+      <div>
+        <h1 class="text-xl md:text-2xl font-black uppercase tracking-tight">Monthly Expense Claim Sheet</h1>
+        <p class="text-xs font-bold text-slate-600">Itemized Reimbursement Statement with Attached Payment Proofs</p>
+      </div>
+      <div class="text-right text-xs space-y-0.5">
+        <p><strong>Project Manager:</strong> <span id="rptManagerName"></span></p>
+        <p><strong>Claim Period:</strong> <span id="rptMonth"></span></p>
+        <p><strong>Submitted On:</strong> <span id="rptGenDate"></span></p>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center bg-slate-100 p-3.5 border border-slate-300 rounded-lg mb-6">
+      <div>
+        <span class="text-xs uppercase font-black text-slate-600">Total Company Reimbursement Claimed</span>
+        <div class="text-2xl font-black text-emerald-800" id="rptTotalAmount">₹0</div>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-bold text-slate-600">Verified Bills Attached:</span>
+        <span class="text-lg font-black text-slate-900 ml-1" id="rptTotalItems">0</span>
+      </div>
+    </div>
+
+    <!-- Summary Table -->
+    <table class="w-full text-left text-xs border border-collapse border-slate-400 mb-6">
+      <thead>
+        <tr class="bg-slate-200 text-slate-800">
+          <th class="border border-slate-400 p-2 text-center w-12">Sr. No.</th>
+          <th class="border border-slate-400 p-2 w-24">Date</th>
+          <th class="border border-slate-400 p-2">Paid To / Vendor</th>
+          <th class="border border-slate-400 p-2">Purpose / Site Note</th>
+          <th class="border border-slate-400 p-2">Category</th>
+          <th class="border border-slate-400 p-2">UTR / Ref No.</th>
+          <th class="border border-slate-400 p-2 text-right w-24">Amount (₹)</th>
+        </tr>
+      </thead>
+      <tbody id="rptTableBody"></tbody>
+    </table>
+
+    <!-- Signatures -->
+    <div class="grid grid-cols-2 gap-8 pt-8 border-t border-slate-300 mb-8">
+      <div>
+        <p class="text-xs font-bold mb-10">Claimed By (Project Manager Signature):</p>
+        <div class="border-b border-slate-600 w-48"></div>
+      </div>
+      <div class="text-right">
+        <p class="text-xs font-bold mb-10">Verified & Approved By (Accounts / Management):</p>
+        <div class="border-b border-slate-600 w-48 ml-auto"></div>
+      </div>
+    </div>
+
+    <!-- Proof Annexure -->
+    <div class="pt-6 border-t-2 border-slate-900">
+      <h2 class="text-sm font-black uppercase tracking-wider mb-4">Annexure: Attached Screenshots, Bills & Receipts</h2>
+      <div id="rptProofsGrid" class="grid grid-cols-2 gap-4"></div>
+    </div>
+  </div>
+
+  <!-- ================= 13. CORE ENGINE JAVASCRIPT ================= -->
+  <script>
+    // Pre-configured API Key provided by user
+    const DEFAULT_USER_API_KEY = "AQ.Ab8RN6LCCJzA32IIufhtZqL9W6LW9bP0dJvdiIXM8yTyivkDUw";
+
+    // Toast Notification Helper (Never blocked by Android Chrome)
+    let toastTimer = null;
+    function showToast(msg, bgClass = "bg-slate-900") {
+      const t = document.getElementById('toastBanner');
+      t.innerText = msg;
+      t.className = `fixed top-12 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-2xl shadow-2xl font-bold text-xs text-white transition-all max-w-xs text-center ${bgClass}`;
+      t.classList.remove('hidden');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('installAppBanner').classList.remove('hidden');
+    });
+
+    function triggerInstallPrompt() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          document.getElementById('installAppBanner').classList.add('hidden');
+          deferredPrompt = null;
+        });
+      }
+    }
+
+    // IndexedDB High-Capacity Storage
+    let db;
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('SiteKhataProDB', 1);
+        req.onupgradeneeded = (e) => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains('transactions')) {
+            d.createObjectStore('transactions', { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = () => { db = req.result; resolve(); };
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    function dbGetAll() {
+      return new Promise((resolve) => {
+        const tx = db.transaction('transactions', 'readonly');
+        const req = tx.objectStore('transactions').getAll();
+        req.onsuccess = () => resolve(req.result || []);
+      });
+    }
+
+    function dbPut(item) {
+      return new Promise((resolve) => {
+        const tx = db.transaction('transactions', 'readwrite');
+        tx.objectStore('transactions').put(item);
+        tx.oncomplete = () => resolve();
+      });
+    }
+
+    function dbDelete(id) {
+      return new Promise((resolve) => {
+        const tx = db.transaction('transactions', 'readwrite');
+        tx.objectStore('transactions').delete(id);
+        tx.oncomplete = () => resolve();
+      });
+    }
+
+    // Categories Setup
+    const defaultCategories = [
+      { id: 'cat_comp', name: 'Claimable from Company', isClaimable: true, badgeClass: 'bg-emerald-600 text-white' },
+      { id: 'cat_pers_claim', name: 'Personal and Claimable', isClaimable: true, badgeClass: 'bg-teal-600 text-white' },
+      { id: 'cat_pers_not', name: 'Personal Not Claimable', isClaimable: false, badgeClass: 'bg-slate-600 text-white' },
+      { id: 'cat_other', name: 'Others', isClaimable: false, badgeClass: 'bg-purple-600 text-white' }
+    ];
+
+    let categories = JSON.parse(localStorage.getItem('sk_cats')) || defaultCategories;
+    let transactions = [];
+    let currentFilter = 'ALL';
+    let userName = localStorage.getItem('sk_username') || '';
+    let apiKey = (localStorage.getItem('sk_gemini_key') || DEFAULT_USER_API_KEY).trim();
+    let discoveredModels = null;
+    let manualTempPhoto = null;
+    let pendingDeleteId = null;
+
+    function sanitizeApiKey(key) {
+      if (!key) return '';
+      return key.trim().replace(/[\r\n\t\s\'\"]/g, '');
+    }
+
+    // Strict Date Normalizer (Prevents transactions from disappearing in month filter)
+    function normalizeDateStr(rawDate) {
+      const fallback = document.getElementById('selectedMonth')?.value
+        ? `${document.getElementById('selectedMonth').value}-${String(new Date().getDate()).padStart(2, '0')}`
+        : new Date().toISOString().split('T')[0];
+
+      if (!rawDate || typeof rawDate !== 'string') return fallback;
+      const clean = rawDate.trim();
+
+      // Already YYYY-MM-DD
+      if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) return clean;
+
+      // DD/MM/YYYY or DD-MM-YYYY
+      const dmy = clean.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+      if (dmy) {
+        return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+      }
+
+      // Try native Date parse (e.g. "22 Oct 2026")
+      const parsed = new Date(clean);
+      if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2020 && parsed.getFullYear() < 2035) {
+        const y = parsed.getFullYear();
+        const m = String(parsed.getMonth() + 1).padStart(2, '0');
+        const d = String(parsed.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      return fallback;
+    }
+
+    // App Boot
+    window.onload = async function() {
+      await openDatabase();
+      if (!localStorage.getItem('sk_gemini_key')) {
+        localStorage.setItem('sk_gemini_key', DEFAULT_USER_API_KEY);
+      }
+
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      document.getElementById('selectedMonth').value = `${yyyy}-${mm}`;
+
+      transactions = await dbGetAll();
+      // Normalize any legacy dates
+      transactions.forEach(t => { t.date = normalizeDateStr(t.date); });
+
+      if (!userName) {
+        document.getElementById('loginModal').classList.remove('hidden');
+      } else {
+        document.getElementById('headerUserName').innerText = userName;
+        renderFilterChips();
+        renderUI();
+      }
+    };
+
+    function handleLogin() {
+      const input = document.getElementById('loginNameInput').value.trim();
+      if (!input) return showToast('Please enter your name', 'bg-red-600');
+      userName = input;
+      localStorage.setItem('sk_username', userName);
+      document.getElementById('headerUserName').innerText = userName;
+      document.getElementById('loginModal').classList.add('hidden');
+      renderFilterChips();
+      renderUI();
+      showToast(`Welcome, ${userName}!`, 'bg-emerald-600');
+    }
+
+    // Logout Flow
+    function showLogoutConfirm() {
+      document.getElementById('logoutConfirmModal').classList.remove('hidden');
+    }
+    function closeLogoutConfirm() {
+      document.getElementById('logoutConfirmModal').classList.add('hidden');
+    }
+    function executeLogout() {
+      localStorage.removeItem('sk_username');
+      userName = '';
+      document.getElementById('loginNameInput').value = '';
+      document.getElementById('headerUserName').innerText = '';
+      closeLogoutConfirm();
+      closeSettingsModal();
+      document.getElementById('loginModal').classList.remove('hidden');
+      showToast('Logged out safely', 'bg-slate-800');
+    }
+
+    // ================= GEMINI 4 ARGON + AUTO-DISCOVERY ENGINE =================
+    async function getAvailableModels(cleanKey) {
+      if (discoveredModels && discoveredModels.length > 0) return discoveredModels;
+
+      // Priority model queue starting with Gemini 4 Argon & 3.8 Flash
+      const defaultPriority = [
+        'gemini-4-argon',
+        'gemini-4.0-argon',
+        'gemini-3.8-flash',
+        'gemini-3.5-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash'
+      ];
+
+      try {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.models && Array.isArray(data.models)) {
+            const valid = data.models
+              .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+              .map(m => m.name.replace('models/', ''));
+
+            // Prioritize Argon / Flash vision models from the account's live list
+            const flashOrArgon = valid.filter(n => n.includes('argon') || n.includes('flash')).reverse();
+            discoveredModels = [...new Set([...defaultPriority.filter(p => valid.includes(p)), ...flashOrArgon, ...defaultPriority])];
+            return discoveredModels;
+          }
+        }
+      } catch (e) {
+        console.warn("Model list fetch skipped, using priority list");
+      }
+      return defaultPriority;
+    }
+
+    async function executeGeminiRequest(key, requestPayload) {
+      const cleanKey = sanitizeApiKey(key);
+      if (!cleanKey) throw new Error("API key is empty.");
+
+      requestPayload.generationConfig = {
+        temperature: 0,
+        maxOutputTokens: 350
+      };
+
+      const modelsToTry = await getAvailableModels(cleanKey);
+      let lastErr = '';
+
+      for (const model of modelsToTry) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(cleanKey)}`;
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestPayload)
+          });
+
+          if (res.ok) {
+            // Move working model to front of cache for instant future calls
+            discoveredModels = [model, ...modelsToTry.filter(m => m !== model)];
+            return await res.json();
+          }
+
+          // Header fallback for AQ. keys if needed
+          const hUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+          const hRes = await fetch(hUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cleanKey },
+            body: JSON.stringify(requestPayload)
+          });
+
+          if (hRes.ok) {
+            discoveredModels = [model, ...modelsToTry.filter(m => m !== model)];
+            return await hRes.json();
+          }
+
+          const errObj = await hRes.json().catch(() => ({}));
+          lastErr = errObj.error ? errObj.error.message : `HTTP ${res.status}`;
+        } catch (err) {
+          lastErr = err.message;
+        }
+      }
+      throw new Error(lastErr || "Could not connect to Google AI.");
+    }
+
+    async function testGeminiConnection() {
+      const inputKey = sanitizeApiKey(document.getElementById('settingsApiKeyInput').value);
+      const statusBox = document.getElementById('apiTestStatus');
+      statusBox.classList.remove('hidden');
+      statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-blue-100 text-blue-800";
+      statusBox.innerText = "⚡ Testing Gemini 4 Argon Engine...";
+
+      if (!inputKey) {
+        statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-red-100 text-red-800";
+        statusBox.innerText = "❌ Please paste your API key first.";
+        return;
+      }
+
+      discoveredModels = null; // Force fresh discovery on test
+      const t0 = performance.now();
+      try {
+        await executeGeminiRequest(inputKey, {
+          contents: [{ parts: [{ text: "Reply OK" }] }]
+        });
+        const elapsed = ((performance.now() - t0) / 1000).toFixed(1);
+        const activeModel = discoveredModels ? discoveredModels[0] : 'gemini-4-argon';
+        statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-emerald-100 text-emerald-800";
+        statusBox.innerText = `✅ Connected in ${elapsed}s! Engine ready (${activeModel}).`;
+      } catch (err) {
+        statusBox.className = "text-[11px] font-bold p-2.5 rounded-lg text-center bg-red-100 text-red-800";
+        statusBox.innerText = `❌ Error: ${err.message}`;
+      }
+    }
+
+    // ================= MULTI-IMAGE PARALLEL TURBO SCANNER (< 15s for 10 photos) =================
+    async function handleBulkFiles(event) {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      const alertBox = document.getElementById('processingAlert');
+      const statusText = document.getElementById('processingStatusText');
+      const stopwatchText = document.getElementById('stopwatchText');
+      alertBox.classList.remove('hidden');
+
+      const startTime = performance.now();
+      let completedCount = 0;
+
+      const timerInterval = setInterval(() => {
+        const secs = ((performance.now() - startTime) / 1000).toFixed(1);
+        stopwatchText.innerText = `Elapsed: ${secs}s`;
+      }, 200);
+
+      statusText.innerText = `⚡ Compressing ${files.length} screenshots...`;
+
+      // 1. Compress all images in parallel (~35KB each)
+      const compressedList = await Promise.all(
+        files.map(file => compressImageFile(file, 600, 0.65))
+      );
+
+      // 2. Create cards immediately on screen (< 0.3s)
+      const todayStr = normalizeDateStr(new Date().toISOString().split('T')[0]);
+      const newRecords = compressedList.map((base64, idx) => {
+        const rec = {
+          id: Date.now() + idx + Math.random(),
+          srNo: transactions.length + idx + 1,
+          amount: 0,
+          paidTo: '⏳ Reading receipt...',
+          note: '',
+          utr: '...',
+          date: todayStr,
+          categoryId: 'cat_comp',
+          proofImage: base64,
+          isDuplicate: false
+        };
+        transactions.push(rec);
+        return rec;
+      });
+
+      await Promise.all(newRecords.map(r => dbPut(r)));
+      renderUI();
+
+      // 3. Process in Parallel Waves of 5
+      statusText.innerHTML = `⚡ Reading ${files.length} receipts in parallel...`;
+
+      const CONCURRENCY = 5;
+      for (let i = 0; i < newRecords.length; i += CONCURRENCY) {
+        const batch = newRecords.slice(i, i + CONCURRENCY);
+        await Promise.all(batch.map(async (record) => {
+          try {
+            let extracted = null;
+            if (apiKey) {
+              extracted = await parseWithGemini(record.proofImage, 'image/jpeg');
+            } else {
+              extracted = await runSingleOfflineOCR(record.proofImage);
+            }
+
+            if (extracted) {
+              record.amount = Number(extracted.amount) || 0;
+              record.paidTo = (extracted.paidTo || `UPI Payment #${record.srNo}`).trim();
+              record.utr = (extracted.utr || 'N/A').trim();
+              record.date = normalizeDateStr(extracted.date);
+
+              // Check for Duplicate UTR across existing transactions
+              if (record.utr && record.utr !== 'N/A' && record.utr.length >= 8) {
+                const dup = transactions.find(t => t.id !== record.id && t.utr === record.utr);
+                if (dup) record.isDuplicate = true;
+              }
+            } else {
+              record.paidTo = `UPI Payment #${record.srNo}`;
+              record.utr = 'N/A';
+            }
+          } catch (e) {
+            record.paidTo = `UPI Payment #${record.srNo}`;
+            record.utr = 'N/A';
+          }
+
+          await dbPut(record);
+          completedCount++;
+          statusText.innerText = `⚡ Scanned ${completedCount} of ${files.length} receipts...`;
+          renderUI();
+        }));
+      }
+
+      clearInterval(timerInterval);
+      const totalSecs = ((performance.now() - startTime) / 1000).toFixed(1);
+      statusText.innerText = `✅ Done! Scanned ${files.length} receipts in ${totalSecs}s`;
+      showToast(`Scanned ${files.length} receipts in ${totalSecs}s!`, 'bg-emerald-600');
+
+      setTimeout(() => alertBox.classList.add('hidden'), 3500);
+      event.target.value = '';
+    }
+
+    async function parseWithGemini(base64Data, mimeType) {
+      const cleanBase64 = base64Data.split(',')[1];
+      const prompt = `Extract Indian UPI receipt details strictly as JSON: {"amount":number,"paidTo":"string","utr":"string","date":"YYYY-MM-DD"}. Output raw JSON only.`;
+      
+      const payload = {
+        contents: [{
+          parts: [
+            { text: prompt },
+            { inline_data: { mime_type: mimeType, data: cleanBase64 } }
+          ]
+        }]
+      };
+
+      const result = await executeGeminiRequest(apiKey, payload);
+      const rawText = result.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+      return JSON.parse(rawText);
+    }
+
+    // Shared Offline OCR Worker
+    let sharedOcrWorker = null;
+    async function runSingleOfflineOCR(base64Image) {
+      try {
+        if (!sharedOcrWorker) {
+          sharedOcrWorker = await Tesseract.createWorker('eng');
+        }
+        const ret = await sharedOcrWorker.recognize(base64Image);
+        const text = ret.data.text;
+
+        let amount = 0;
+        const amtMatch = text.match(/(?:₹|Rs\.?|INR)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i) 
+                      || text.match(/([0-9,]{2,10}(?:\.[0-9]{2})?)\s*(?:paid|completed|debited)/i);
+        if (amtMatch) amount = parseFloat(amtMatch[1].replace(/,/g, '')) || 0;
+
+        let utr = 'N/A';
+        const utrMatch = text.match(/(?:UPI\s*Ref|UTR|Txn\s*ID|Ref\s*No)[\s:]*([0-9]{12})/i) 
+                      || text.match(/\b([0-9]{12})\b/);
+        if (utrMatch) utr = utrMatch[1];
+
+        let paidTo = 'UPI Vendor';
+        const payeeMatch = text.match(/(?:Paid to|To|Transfer to)\s*[\n:]*\s*([A-Za-z0-9\s&.]{3,25})/i);
+        if (payeeMatch) paidTo = payeeMatch[1].split('\n')[0].trim();
+
+        return { amount, utr, paidTo, date: new Date().toISOString().split('T')[0] };
+      } catch (e) {
+        return { amount: 0, utr: 'N/A', paidTo: 'UPI Payment', date: new Date().toISOString().split('T')[0] };
+      }
+    }
+
+    function compressImageFile(file, maxWidth, quality) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+          const img = new Image();
+          img.src = e.target.result;
+          img.onload = () => {
+            const scale = Math.min(maxWidth / img.width, 1);
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+        };
+      });
+    }
+
+    // Lightbox Viewer
+    function openLightbox(id) {
+      const txn = transactions.find(t => t.id === id);
+      if (!txn || !txn.proofImage) return;
+      document.getElementById('lightboxImg').src = txn.proofImage;
+      document.getElementById('lightboxCaption').innerText = `Sr. #${txn.srNo} — ${txn.paidTo} (₹${txn.amount.toLocaleString('en-IN')})`;
+      document.getElementById('lightboxSub').innerText = `Date: ${txn.date} | UTR: ${txn.utr}`;
+      document.getElementById('imageLightbox').classList.remove('hidden');
+    }
+    function closeLightbox() {
+      document.getElementById('imageLightbox').classList.add('hidden');
+    }
+
+    // Filter Chips
+    function renderFilterChips() {
+      const container = document.getElementById('filterChipsContainer');
+      container.innerHTML = `
+        <button onclick="setFilter('ALL')" 
+          class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'ALL' ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">
+          All
+        </button>
+        <button onclick="setFilter('CLAIMABLE_ONLY')" 
+          class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${currentFilter === 'CLAIMABLE_ONLY' ? 'bg-emerald-700 text-white shadow' : 'bg-white border border-emerald-400 text-emerald-700'}">
+          ⭐ All Claimable
+        </button>
+      `;
+
+      categories.forEach(c => {
+        const isSel = currentFilter === c.id;
+        container.innerHTML += `
+          <button onclick="setFilter('${c.id}')" 
+            class="px-3 py-1.5 rounded-full whitespace-nowrap transition ${isSel ? 'bg-slate-900 text-white' : 'bg-white border text-slate-700'}">
+            ${c.name}
+          </button>
+        `;
+      });
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      renderFilterChips();
+      renderUI();
+    }
+
+    function clearSearch() {
+      document.getElementById('searchInput').value = '';
+      renderUI();
+    }
+
+    // Manual Entry & Edit Modal
+    function setQuickNote(text) {
+      document.getElementById('txnNote').value = text;
+    }
+
+    async function handleManualPhotoSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      manualTempPhoto = await compressImageFile(file, 700, 0.7);
+      document.getElementById('manualPhotoPreview').src = manualTempPhoto;
+      document.getElementById('manualPhotoPreviewWrap').classList.remove('hidden');
+    }
+
+    function openManualModal(editId = null) {
+      manualTempPhoto = null;
+      document.getElementById('txnPhotoInput').value = '';
+      document.getElementById('manualPhotoPreviewWrap').classList.add('hidden');
+
+      const select = document.getElementById('txnCategorySelect');
+      select.innerHTML = categories.map(c => `
+        <option value="${c.id}">${c.name} ${c.isClaimable ? '(⭐ Claimable)' : ''}</option>
+      `).join('');
+
+      if (editId) {
+        const txn = transactions.find(t => t.id === editId);
+        if (!txn) return;
+        document.getElementById('modalTitle').innerText = `Edit Record #${txn.srNo}`;
+        document.getElementById('editTxnId').value = txn.id;
+        document.getElementById('txnAmount').value = txn.amount;
+        document.getElementById('txnPaidTo').value = txn.paidTo;
+        document.getElementById('txnNote').value = txn.note || '';
+        document.getElementById('txnDate').value = normalizeDateStr(txn.date);
+        document.getElementById('txnUtr').value = txn.utr === 'N/A' ? '' : txn.utr;
+        document.getElementById('txnCategorySelect').value = txn.categoryId;
+        if (txn.proofImage) {
+          manualTempPhoto = txn.proofImage;
+          document.getElementById('manualPhotoPreview').src = txn.proofImage;
+          document.getElementById('manualPhotoPreviewWrap').classList.remove('hidden');
+        }
+      } else {
+        document.getElementById('modalTitle').innerText = 'Add Expense Manually';
+        document.getElementById('editTxnId').value = '';
+        document.getElementById('txnAmount').value = '';
+        document.getElementById('txnPaidTo').value = '';
+        document.getElementById('txnNote').value = '';
+        document.getElementById('txnDate').value = new Date().toISOString().split('T')[0];
+        document.getElementById('txnUtr').value = '';
+        document.getElementById('txnCategorySelect').value = categories[0].id;
+      }
+
+      document.getElementById('txnModal').classList.remove('hidden');
+    }
+
+    function closeTxnModal() {
+      document.getElementById('txnModal').classList.add('hidden');
+    }
+
+    async function saveManualTxn() {
+      const amount = parseFloat(document.getElementById('txnAmount').value);
+      const paidTo = document.getElementById('txnPaidTo').value.trim();
+      const note = document.getElementById('txnNote').value.trim();
+      const date = normalizeDateStr(document.getElementById('txnDate').value);
+      const utr = document.getElementById('txnUtr').value.trim() || 'N/A';
+      const categoryId = document.getElementById('txnCategorySelect').value;
+      const editId = document.getElementById('editTxnId').value;
+
+      if (isNaN(amount) || amount < 0) return showToast('Please enter a valid amount', 'bg-red-600');
+      if (!paidTo) return showToast('Please enter Vendor / Recipient name', 'bg-red-600');
+
+      if (editId) {
+        const txn = transactions.find(t => String(t.id) === String(editId));
+        if (txn) {
+          txn.amount = amount;
+          txn.paidTo = paidTo;
+          txn.note = note;
+          txn.date = date;
+          txn.utr = utr;
+          txn.categoryId = categoryId;
+          if (manualTempPhoto) txn.proofImage = manualTempPhoto;
+          await dbPut(txn);
+          showToast(`Updated Record #${txn.srNo}`, 'bg-emerald-600');
+        }
+      } else {
+        const newTxn = {
+          id: Date.now() + Math.random(),
+          srNo: transactions.length + 1,
+          amount: amount,
+          paidTo: paidTo,
+          note: note,
+          utr: utr,
+          date: date,
+          categoryId: categoryId,
+          proofImage: manualTempPhoto,
+          isDuplicate: false
+        };
+        transactions.push(newTxn);
+        await dbPut(newTxn);
+        showToast('Manual expense saved!', 'bg-emerald-600');
+      }
+
+      closeTxnModal();
+      renderUI();
+    }
+
+    async function setTransactionCategory(id, catId) {
+      const txn = transactions.find(t => t.id === id);
+      if (txn) {
+        txn.categoryId = catId;
+        await dbPut(txn);
+        renderUI();
+      }
+    }
+
+    // Custom Delete Modal Flow
+    function promptDeleteTxn(id) {
+      pendingDeleteId = id;
+      const txn = transactions.find(t => t.id === id);
+      if (txn) {
+        document.getElementById('deleteConfirmDesc').innerText = `Remove Sr. #${txn.srNo} (${txn.paidTo} - ₹${txn.amount})?`;
+      }
+      document.getElementById('deleteConfirmModal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      document.getElementById('deleteConfirmModal').classList.add('hidden');
+    }
+
+    async function confirmDeleteTxn() {
+      if (!pendingDeleteId) return;
+      await dbDelete(pendingDeleteId);
+      transactions = transactions.filter(t => t.id !== pendingDeleteId);
+      transactions.forEach((t, i) => t.srNo = i + 1);
+      await Promise.all(transactions.map(t => dbPut(t)));
+      closeDeleteModal();
+      renderUI();
+      showToast('Transaction deleted', 'bg-slate-800');
+    }
+
+    // Main Dashboard Renderer
+    function renderUI() {
+      const container = document.getElementById('transactionsContainer');
+      container.innerHTML = '';
+
+      const selMonth = document.getElementById('selectedMonth').value;
+      const searchQ = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+
+      let claimTotal = 0;
+      let claimCount = 0;
+      let nonClaimTotal = 0;
+
+      const monthTxns = transactions.filter(t => !selMonth || (t.date && t.date.startsWith(selMonth)));
+
+      monthTxns.forEach(t => {
+        const cat = categories.find(c => c.id === t.categoryId);
+        if (cat && cat.isClaimable) {
+          claimTotal += t.amount;
+          claimCount++;
+        } else {
+          nonClaimTotal += t.amount;
+        }
+      });
+
+      document.getElementById('totalClaimableDisplay').innerText = `₹ ${claimTotal.toLocaleString('en-IN')}`;
+      document.getElementById('claimCountBadge').innerText = `${claimCount} claimable`;
+      document.getElementById('nonClaimableDisplay').innerText = `Non-Claimable / Personal: ₹${nonClaimTotal.toLocaleString('en-IN')}`;
+      document.getElementById('totalMonthCountText').innerText = `${monthTxns.length} transactions in this month`;
+
+      let filtered = monthTxns;
+      if (currentFilter === 'CLAIMABLE_ONLY') {
+        filtered = monthTxns.filter(t => {
+          const cat = categories.find(c => c.id === t.categoryId);
+          return cat && cat.isClaimable;
+        });
+      } else if (currentFilter !== 'ALL') {
+        filtered = monthTxns.filter(t => t.categoryId === currentFilter);
+      }
+
+      if (searchQ) {
+        filtered = filtered.filter(t =>
+          (t.paidTo && t.paidTo.toLowerCase().includes(searchQ)) ||
+          (t.note && t.note.toLowerCase().includes(searchQ)) ||
+          (t.utr && t.utr.toLowerCase().includes(searchQ)) ||
+          String(t.amount).includes(searchQ)
+        );
+      }
+
+      if (!filtered.length) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-slate-400 bg-white rounded-2xl border border-dashed border-slate-300">
+            <p class="text-4xl">📂</p>
+            <p class="mt-2 text-sm font-bold text-slate-700">No transactions to show</p>
+            <p class="text-xs text-slate-400 mt-0.5">Tap 'Scan UPI Gallery' or 'Manual Entry' above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.slice().reverse().forEach(t => {
+        const card = document.createElement('div');
+        card.className = `bg-white p-4 rounded-2xl shadow-sm border ${t.isDuplicate ? 'border-red-400 bg-red-50/20' : 'border-slate-200'} space-y-3`;
+
+        const catButtonsHtml = categories.map(c => `
+          <button onclick="setTransactionCategory(${t.id}, '${c.id}')" 
+            class="px-2 py-2 text-[10px] font-black rounded-lg border transition ${t.categoryId === c.id ? (c.badgeClass || 'bg-slate-900 text-white') : 'bg-slate-50 text-slate-600 border-slate-200'}">
+            ${c.name}
+          </button>
+        `).join('');
+
+        card.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-start gap-2.5">
+              <span class="bg-slate-900 text-white text-xs font-black px-2 py-1 rounded-md mt-0.5">#${t.srNo}</span>
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <h4 class="font-black text-slate-900 text-base leading-tight">${t.paidTo}</h4>
+                  ${t.isDuplicate ? `<span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded border border-red-300">⚠️ DUPLICATE UTR</span>` : ''}
+                </div>
+                ${t.note ? `<p class="text-xs font-bold text-blue-700 mt-0.5">📌 ${t.note}</p>` : ''}
+                <p class="text-[11px] text-slate-400 font-mono mt-0.5">UTR: ${t.utr} • ${t.date}</p>
+              </div>
+            </div>
+            <div class="text-right shrink-0">
+              <span class="text-lg font-black ${t.amount === 0 ? 'text-amber-600' : 'text-slate-900'}">₹${t.amount.toLocaleString('en-IN')}</span>
+              <div class="flex gap-2.5 justify-end mt-1 text-xs font-bold">
+                <button onclick="openManualModal(${t.id})" class="text-blue-600">✏️ Edit</button>
+                <button onclick="promptDeleteTxn(${t.id})" class="text-red-500">🗑️ Delete</button>
+              </div>
+            </div>
+          </div>
+
+          ${t.proofImage ? `
+            <div onclick="openLightbox(${t.id})" class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-200 cursor-pointer active:bg-slate-100">
+              <div class="flex items-center gap-2.5">
+                <img src="${t.proofImage}" class="w-11 h-11 object-cover rounded-lg border bg-white" />
+                <div>
+                  <span class="text-xs text-slate-700 font-bold block">Receipt / Screenshot Attached</span>
+                  <span class="text-[10px] text-blue-600 font-bold">🔍 Tap to view full screen</span>
+                </div>
+              </div>
+              <span class="text-slate-400 text-sm pr-1">➔</span>
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-1.5 pt-2 border-t border-slate-100">
+            ${catButtonsHtml}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // ================= MONTHLY CLAIM REPORT & EXCEL EXPORT =================
+    function getMonthClaimableList() {
+      const selMonth = document.getElementById('selectedMonth').value;
+      return transactions.filter(t => {
+        const matchesMonth = !selMonth || (t.date && t.date.startsWith(selMonth));
+        const cat = categories.find(c => c.id === t.categoryId);
+        return matchesMonth && cat && cat.isClaimable;
+      });
+    }
+
+    function openMonthlyProofReport() {
+      const selMonth = document.getElementById('selectedMonth').value;
+      const claimTxns = getMonthClaimableList();
+
+      if (!claimTxns.length) {
+        return showToast("No claimable expenses found for this month!", "bg-amber-600");
+      }
+
+      document.getElementById('rptManagerName').innerText = userName;
+      document.getElementById('rptMonth').innerText = selMonth || 'All Dates';
+      document.getElementById('rptGenDate').innerText = new Date().toLocaleDateString('en-IN');
+      document.getElementById('rptTotalItems').innerText = claimTxns.length;
+
+      let sum = 0;
+      const tbody = document.getElementById('rptTableBody');
+      const proofsGrid = document.getElementById('rptProofsGrid');
+      tbody.innerHTML = '';
+      proofsGrid.innerHTML = '';
+
+      // Sequential numbering 1, 2, 3... specifically for the claim voucher
+      claimTxns.forEach((t, idx) => {
+        const claimSr = idx + 1;
+        sum += t.amount;
+        const cat = categories.find(c => c.id === t.categoryId);
+
+        tbody.innerHTML += `
+          <tr>
+            <td class="border border-slate-400 p-2 text-center font-bold">${claimSr}</td>
+            <td class="border border-slate-400 p-2">${t.date}</td>
+            <td class="border border-slate-400 p-2 font-bold">${t.paidTo}</td>
+            <td class="border border-slate-400 p-2">${t.note || '-'}</td>
+            <td class="border border-slate-400 p-2">${cat ? cat.name : 'Claimable'}</td>
+            <td class="border border-slate-400 p-2 font-mono">${t.utr}</td>
+            <td class="border border-slate-400 p-2 text-right font-black">₹${t.amount.toLocaleString('en-IN')}</td>
+          </tr>
+        `;
+
+        proofsGrid.innerHTML += `
+          <div class="proof-card border border-slate-300 p-3 rounded-lg bg-slate-50 text-center">
+            <div class="flex justify-between items-center text-xs font-bold mb-1 border-b pb-1">
+              <span>Claim Sr. #${claimSr} — ${t.paidTo}</span>
+              <span class="text-emerald-700">₹${t.amount.toLocaleString('en-IN')}</span>
+            </div>
+            ${t.note ? `<p class="text-[10px] font-bold text-slate-600 mb-1">Purpose: ${t.note}</p>` : ''}
+            ${t.proofImage ? `
+              <img src="${t.proofImage}" class="max-h-72 mx-auto rounded border object-contain mt-1" />
+            ` : `<div class="py-8 text-xs text-slate-400 italic">Cash / Manual Entry (No photo attached)</div>`}
+            <p class="text-[10px] font-mono text-slate-500 mt-1">Date: ${t.date} | UTR: ${t.utr}</p>
+          </div>
+        `;
+      });
+
+      document.getElementById('rptTotalAmount').innerText = `₹ ${sum.toLocaleString('en-IN')}`;
+      document.getElementById('printableReport').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    }
+
+    function closeReport() {
+      document.getElementById('printableReport').classList.add('hidden');
+    }
+
+    function exportToExcel() {
+      const selMonth = document.getElementById('selectedMonth').value;
+      const claimTxns = getMonthClaimableList();
+      if (!claimTxns.length) return showToast("No claimable items to export", "bg-red-600");
+
+      const rows = claimTxns.map((t, idx) => {
+        const cat = categories.find(c => c.id === t.categoryId);
+        return {
+          "Claim Sr. No.": idx + 1,
+          "Date": t.date,
+          "Paid To / Vendor": t.paidTo,
+          "Site Purpose / Remark": t.note || "",
+          "Category": cat ? cat.name : "Claimable",
+          "Amount (INR)": t.amount,
+          "UTR / Ref No.": t.utr,
+          "Project Manager": userName
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Claim_Sheet");
+      XLSX.writeFile(wb, `Company_Claim_${userName}_${selMonth}.xlsx`);
+      showToast("Excel sheet downloaded!", "bg-emerald-600");
+    }
+
+    function shareWhatsAppSummary() {
+      const selMonth = document.getElementById('selectedMonth').value;
+      const claimTxns = getMonthClaimableList();
+      if (!claimTxns.length) return showToast("No claimable expenses for this month", "bg-amber-600");
+
+      let total = 0;
+      let lines = [`*📋 EXPENSE CLAIM SUMMARY (${selMonth})*`, `*Manager:* ${userName}`, ``];
+      claimTxns.forEach((t, idx) => {
+        total += t.amount;
+        lines.push(`${idx + 1}. *₹${t.amount}* — ${t.paidTo} ${t.note ? `(${t.note})` : ''} [${t.date}]`);
+      });
+      lines.push(``);
+      lines.push(`*🏢 TOTAL CLAIMABLE: ₹${total.toLocaleString('en-IN')}*`);
+
+      const url = `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}`;
+      window.open(url, '_blank');
+    }
+
+    // Backup & Restore JSON
+    function downloadJsonBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+        userName,
+        categories,
+        transactions
+      }));
+      const a = document.createElement('a');
+      a.setAttribute("href", dataStr);
+      a.setAttribute("download", `SiteKhata_Backup_${new Date().toISOString().split('T')[0]}.json`);
+      a.click();
+      showToast("Backup file downloaded", "bg-emerald-600");
+    }
+
+    function restoreJsonBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.transactions && Array.isArray(data.transactions)) {
+            for (const t of data.transactions) {
+              t.date = normalizeDateStr(t.date);
+              await dbPut(t);
+            }
+            transactions = await dbGetAll();
+            if (data.categories) {
+              categories = data.categories;
+              localStorage.setItem('sk_cats', JSON.stringify(categories));
+            }
+            renderFilterChips();
+            renderUI();
+            closeSettingsModal();
+            showToast("Backup restored successfully!", "bg-emerald-600");
+          }
+        } catch (err) {
+          showToast("Invalid backup file", "bg-red-600");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Category Modal
+    function openCategoryModal() {
+      renderCategoryModalList();
+      document.getElementById('categoryModal').classList.remove('hidden');
+    }
+    function closeCategoryModal() {
+      document.getElementById('categoryModal').classList.add('hidden');
+    }
+
+    function renderCategoryModalList() {
+      const list = document.getElementById('categoryListContainer');
+      list.innerHTML = categories.map(c => `
+        <div class="flex items-center justify-between p-2.5 bg-slate-100 rounded-lg text-xs font-bold">
+          <div>
+            <span>${c.name}</span>
+            <span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded ${c.isClaimable ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'}">
+              ${c.isClaimable ? 'Claimable' : 'Not Claimable'}
+            </span>
+          </div>
+          ${!['cat_comp','cat_pers_claim','cat_pers_not','cat_other'].includes(c.id) ? `
+            <button onclick="deleteCategory('${c.id}')" class="text-red-500 font-bold">Delete</button>
+          ` : '<span class="text-slate-400 text-[10px]">Default</span>'}
+        </div>
+      `).join('');
+    }
+
+    function saveNewCategory() {
+      const name = document.getElementById('newCategoryName').value.trim();
+      const isClaimable = document.getElementById('newCategoryIsClaimable').checked;
+      if (!name) return showToast('Enter a category name', 'bg-red-600');
+
+      const newCat = {
+        id: 'cust_' + Date.now(),
+        name: name,
+        isClaimable: isClaimable,
+        badgeClass: isClaimable ? 'bg-emerald-700 text-white' : 'bg-slate-700 text-white'
+      };
+
+      categories.push(newCat);
+      localStorage.setItem('sk_cats', JSON.stringify(categories));
+      document.getElementById('newCategoryName').value = '';
+      renderCategoryModalList();
+      renderFilterChips();
+      renderUI();
+      showToast(`Added "${name}"`, 'bg-emerald-600');
+    }
+
+    function deleteCategory(id) {
+      categories = categories.filter(c => c.id !== id);
+      localStorage.setItem('sk_cats', JSON.stringify(categories));
+      renderCategoryModalList();
+      renderFilterChips();
+      renderUI();
+    }
+
+    // Settings Modal
+    function openSettingsModal() {
+      document.getElementById('settingsNameInput').value = userName;
+      document.getElementById('settingsApiKeyInput').value = apiKey;
+      document.getElementById('apiTestStatus').classList.add('hidden');
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.add('hidden');
+    }
+    function saveSettings() {
+      userName = document.getElementById('settingsNameInput').value.trim() || userName;
+      apiKey = sanitizeApiKey(document.getElementById('settingsApiKeyInput').value) || DEFAULT_USER_API_KEY;
+      discoveredModels = null;
+      localStorage.setItem('sk_username', userName);
+      localStorage.setItem('sk_gemini_key', apiKey);
+      document.getElementById('headerUserName').innerText = userName;
+      closeSettingsModal();
+      renderUI();
+      showToast('Settings saved!', 'bg-emerald-600');
+    }
+  </script>
+</body>
+</html>
